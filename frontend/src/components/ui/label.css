@@ -1,0 +1,20 @@
+.mm-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+
+.mm-label__required {
+  color: var(--color-error);
+  margin-left: var(--space-1);
+}
+
+.mm-label__hint {
+  display: block;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}

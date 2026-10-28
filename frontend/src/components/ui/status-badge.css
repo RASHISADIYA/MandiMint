@@ -1,0 +1,42 @@
+.mm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.mm-badge svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.mm-badge--success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.mm-badge--pending {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
+.mm-badge--warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.mm-badge--error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.mm-badge--neutral {
+  background: var(--color-neutral-bg);
+  color: var(--color-text-muted);
+}

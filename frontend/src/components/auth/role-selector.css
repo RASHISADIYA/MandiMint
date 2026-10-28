@@ -1,0 +1,112 @@
+.mm-role-selector {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+@media (min-width: 560px) {
+  .mm-role-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mm-role-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.mm-role-option:hover {
+  border-color: var(--color-forest-green);
+}
+
+.mm-role-option:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.mm-role-option--selected {
+  border-color: var(--color-primary);
+  background: var(--color-mint);
+}
+
+.mm-role-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mm-role-option__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--color-mint);
+  color: var(--color-primary);
+}
+
+.mm-role-option--selected .mm-role-option__icon {
+  background: var(--color-primary);
+  color: var(--color-mint);
+}
+
+.mm-role-option__icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.mm-role-option__body {
+  min-width: 0;
+}
+
+.mm-role-option__label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.mm-role-option__description {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-muted);
+}
+
+.mm-role-option__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-white);
+}
+
+.mm-role-option--selected .mm-role-option__check {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.mm-role-option__check svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}

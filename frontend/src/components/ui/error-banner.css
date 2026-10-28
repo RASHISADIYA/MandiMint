@@ -1,0 +1,33 @@
+.mm-error-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid #fecaca;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.mm-error-banner__icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.1rem;
+}
+
+.mm-error-banner__body {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.mm-error-banner__message {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-relaxed);
+}
+
+.mm-error-banner__actions {
+  flex-shrink: 0;
+}

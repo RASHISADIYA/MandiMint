@@ -1,0 +1,23 @@
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+
+artifacts/
+cache/
+coverage/
+coverage.json
+typechain-types/
+deployments/
+
+*.log
+.DS_Store
+
+# Temporary local diagnostic — not referenced by any npm script or application code
+scripts/check-deployer.js
