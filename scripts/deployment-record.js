@@ -2,9 +2,10 @@ const fs = require("fs");
 const path = require("path");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
+const DEPLOYMENTS_ROOT = path.join(PROJECT_ROOT, "deployments");
+
 const DEPLOYMENT_RECORD_DIRECTORY = path.join(
-  PROJECT_ROOT,
-  "deployments",
+  DEPLOYMENTS_ROOT,
   "mstTestnet"
 );
 const DEPLOYMENT_RECORD_FILE = path.join(
@@ -12,12 +13,22 @@ const DEPLOYMENT_RECORD_FILE = path.join(
   "MandiMint.json"
 );
 
-function recordFilePath(directory) {
-  return path.join(directory || DEPLOYMENT_RECORD_DIRECTORY, "MandiMint.json");
+function getNetworkDeploymentDirectory(networkName = "mstTestnet") {
+  return path.join(DEPLOYMENTS_ROOT, networkName);
 }
 
-function readDeploymentRecord(directory) {
-  const file = recordFilePath(directory);
+function recordFilePath(directoryOrNetwork) {
+  if (!directoryOrNetwork) {
+    return DEPLOYMENT_RECORD_FILE;
+  }
+  if (directoryOrNetwork.includes(path.sep) || directoryOrNetwork.includes("/")) {
+    return path.join(directoryOrNetwork, "MandiMint.json");
+  }
+  return path.join(DEPLOYMENTS_ROOT, directoryOrNetwork, "MandiMint.json");
+}
+
+function readDeploymentRecord(directoryOrNetwork) {
+  const file = recordFilePath(directoryOrNetwork);
 
   if (!fs.existsSync(file)) {
     return null;
@@ -46,16 +57,18 @@ function readDeploymentRecord(directory) {
   return parsed;
 }
 
-function writeDeploymentRecord(record, directory) {
-  const file = recordFilePath(directory);
+function writeDeploymentRecord(record, directoryOrNetwork) {
+  const file = recordFilePath(directoryOrNetwork);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`, "utf8");
   return file;
 }
 
 module.exports = {
+  DEPLOYMENTS_ROOT,
   DEPLOYMENT_RECORD_DIRECTORY,
   DEPLOYMENT_RECORD_FILE,
+  getNetworkDeploymentDirectory,
   readDeploymentRecord,
   writeDeploymentRecord,
 };

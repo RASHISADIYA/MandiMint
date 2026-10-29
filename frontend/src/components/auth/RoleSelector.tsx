@@ -4,7 +4,7 @@ import type { MandiMintRole } from "../../auth/types";
 import "./role-selector.css";
 
 interface RoleSelectorProps {
-  value: MandiMintRole;
+  value: MandiMintRole | null;
   onChange: (role: MandiMintRole) => void;
   disabled?: boolean;
   legend?: string;

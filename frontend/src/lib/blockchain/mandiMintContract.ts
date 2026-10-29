@@ -4,14 +4,31 @@ import {
   Interface,
   JsonRpcProvider,
   type ContractTransactionResponse,
+  type Signer,
 } from "ethers";
 import {
   getMandiMintContractConfig,
   type MandiMintContractConfig,
 } from "../../config/blockchain";
+import { type NetworkId } from "../../config/networks";
 import { formatQuantityKg } from "../format";
 import { getEmbeddedEthersSigner } from "../ethers/embeddedSigner";
 import { MANDIMINT_ABI } from "./mandiMintAbi";
+import defaultVerifiedBatches from "../../config/verifiedBatches.json";
+
+export type SignerOrWallet = Signer | ConnectedWallet;
+
+export async function resolveSigner(signerOrWallet: SignerOrWallet): Promise<Signer> {
+  if (
+    signerOrWallet &&
+    typeof (signerOrWallet as Signer).getAddress === "function" &&
+    typeof (signerOrWallet as Signer).signMessage === "function" &&
+    !("getEthereumProvider" in signerOrWallet)
+  ) {
+    return signerOrWallet as Signer;
+  }
+  return getEmbeddedEthersSigner(signerOrWallet as ConnectedWallet);
+}
 
 export interface MandiMintBatch {
   batchId: bigint;
@@ -46,40 +63,53 @@ export interface RecordBatchParams {
 }
 
 export class MandiMintNotConfiguredError extends Error {
-  constructor() {
+  public readonly networkId: NetworkId;
+  constructor(networkId: NetworkId = "mstTestnet") {
+    const netName = networkId === "mstMainnet" ? "MST Mainnet" : "MST Testnet";
     super(
-      "MandiMint contract or MST Testnet is not configured. No blockchain calls were made.",
+      `MandiMint smart contract is not deployed or configured on ${netName}. Write operations are disabled until official contract deployment.`,
     );
     this.name = "MandiMintNotConfiguredError";
+    this.networkId = networkId;
   }
+}
+
+export type GasPreflightStatus = "sufficient" | "insufficient" | "unknown";
+
+export interface GasPreflightResult {
+  status: GasPreflightStatus;
+  address: string;
+  balance: bigint | null;
+  estimatedCost: bigint | null;
+  error?: string;
 }
 
 const contractInterface = new Interface(MANDIMINT_ABI);
 
-let cachedProvider: JsonRpcProvider | null = null;
-let cachedProviderKey = "";
+const cachedProviders = new Map<string, JsonRpcProvider>();
 
-function requireConfig(): MandiMintContractConfig {
-  const config = getMandiMintContractConfig();
+function requireConfig(networkId: NetworkId = "mstTestnet"): MandiMintContractConfig {
+  const config = getMandiMintContractConfig(networkId);
   if (!config) {
-    throw new MandiMintNotConfiguredError();
+    throw new MandiMintNotConfiguredError(networkId);
   }
   return config;
 }
 
 function getReadProvider(config: MandiMintContractConfig): JsonRpcProvider {
   const key = `${config.chain.chainId}:${config.chain.rpcUrl}`;
-  if (!cachedProvider || cachedProviderKey !== key) {
-    cachedProvider = new JsonRpcProvider(config.chain.rpcUrl, config.chain.chainId, {
+  let provider = cachedProviders.get(key);
+  if (!provider) {
+    provider = new JsonRpcProvider(config.chain.rpcUrl, config.chain.chainId, {
       staticNetwork: true,
     });
-    cachedProviderKey = key;
+    cachedProviders.set(key, provider);
   }
-  return cachedProvider;
+  return provider;
 }
 
-function getReadContract(): Contract {
-  const config = requireConfig();
+export function getReadContract(networkId: NetworkId = "mstTestnet"): Contract {
+  const config = requireConfig(networkId);
   return new Contract(
     config.address,
     MANDIMINT_ABI,
@@ -87,8 +117,11 @@ function getReadContract(): Contract {
   );
 }
 
-export async function readBatch(batchId: bigint): Promise<MandiMintBatch> {
-  const result = await getReadContract().getBatch(batchId);
+export async function readBatch(
+  batchId: bigint,
+  networkId: NetworkId = "mstTestnet",
+): Promise<MandiMintBatch> {
+  const result = await getReadContract(networkId).getBatch(batchId);
 
   return {
     batchId: result[0] as bigint,
@@ -102,9 +135,10 @@ export async function readBatch(batchId: bigint): Promise<MandiMintBatch> {
 
 export async function readBatchDetails(
   batchId: bigint,
+  networkId: NetworkId = "mstTestnet",
 ): Promise<MandiMintBatchDetails> {
-  const batch = await readBatch(batchId);
-  const result = await getReadContract().getBatchAllocations(batchId);
+  const batch = await readBatch(batchId, networkId);
+  const result = await getReadContract(networkId).getBatchAllocations(batchId);
   const farmers = result[0] as string[];
   const quantitiesKg = result[1] as bigint[];
 
@@ -119,8 +153,9 @@ export async function readBatchDetails(
 
 export async function readFarmerAllocations(
   farmer: string,
+  networkId: NetworkId = "mstTestnet",
 ): Promise<FarmerAllocationRow[]> {
-  const result = await getReadContract().getFarmerAllocations(farmer);
+  const result = await getReadContract(networkId).getFarmerAllocations(farmer);
   const batchIds = result[0] as bigint[];
   const quantitiesKg = result[1] as bigint[];
 
@@ -133,24 +168,36 @@ export async function readFarmerAllocations(
 export async function readFarmerAllocation(
   batchId: bigint,
   farmer: string,
+  networkId: NetworkId = "mstTestnet",
 ): Promise<bigint> {
-  return (await getReadContract().getFarmerAllocation(batchId, farmer)) as bigint;
+  return (await getReadContract(networkId).getFarmerAllocation(batchId, farmer)) as bigint;
 }
 
-export async function readManagerStatus(address: string): Promise<boolean> {
-  return (await getReadContract().isManager(address)) as boolean;
+export async function readManagerStatus(
+  address: string,
+  networkId: NetworkId = "mstTestnet",
+): Promise<boolean> {
+  try {
+    return (await getReadContract(networkId).isManager(address)) as boolean;
+  } catch {
+    return false;
+  }
 }
 
-export async function readOwner(): Promise<string> {
-  return (await getReadContract().owner()) as string;
+export async function readOwner(
+  networkId: NetworkId = "mstTestnet",
+): Promise<string> {
+  return (await getReadContract(networkId).owner()) as string;
 }
 
-export async function submitRecordBatch(
-  wallet: ConnectedWallet,
-  params: RecordBatchParams,
+export async function updateManagerStatus(
+  walletOrSigner: SignerOrWallet,
+  manager: string,
+  authorized: boolean,
+  targetNetworkId: NetworkId = "mstTestnet",
 ): Promise<ContractTransactionResponse> {
-  const config = requireConfig();
-  const signer = await getEmbeddedEthersSigner(wallet);
+  const config = requireConfig(targetNetworkId);
+  const signer = await resolveSigner(walletOrSigner);
   const provider = signer.provider;
 
   if (!provider) {
@@ -161,7 +208,145 @@ export async function submitRecordBatch(
   const expectedChainId = BigInt(config.chain.chainId);
   if (network.chainId !== expectedChainId) {
     throw new Error(
-      `Connected wallet is on chain ${network.chainId.toString()}, but MandiMint requires chain ${expectedChainId.toString()}.`,
+      `Connected wallet is on chain ${network.chainId}, but ${config.chain.nativeCurrencyName} requires chain ${expectedChainId.toString()}.`,
+    );
+  }
+
+  const contract = new Contract(config.address, MANDIMINT_ABI, signer);
+  return (await contract.setManager(manager, authorized)) as ContractTransactionResponse;
+}
+
+export async function estimateRecordBatchGas(
+  walletOrSigner: SignerOrWallet,
+  _params: RecordBatchParams,
+  targetNetworkId: NetworkId = "mstTestnet",
+): Promise<GasPreflightResult> {
+  void _params;
+  const config = getMandiMintContractConfig(targetNetworkId);
+  if (!config) {
+    return {
+      status: "unknown",
+      address: "",
+      balance: null,
+      estimatedCost: null,
+      error: `MandiMint contract is not configured on ${targetNetworkId === "mstMainnet" ? "MST Mainnet" : "MST Testnet"}.`,
+    };
+  }
+
+  const signer = await resolveSigner(walletOrSigner);
+  const provider = signer.provider;
+
+  if (!provider) {
+    return {
+      status: "unknown",
+      address: "",
+      balance: null,
+      estimatedCost: null,
+      error: "The connected wallet did not expose an ethers provider.",
+    };
+  }
+
+  let address = "";
+  try {
+    address = await signer.getAddress();
+  } catch {
+    return {
+      status: "unknown",
+      address: "",
+      balance: null,
+      estimatedCost: null,
+      error: "Could not read the connected wallet address.",
+    };
+  }
+
+  let balance: bigint;
+  try {
+    balance = await provider.getBalance(address);
+  } catch {
+    return {
+      status: "unknown",
+      address,
+      balance: null,
+      estimatedCost: null,
+      error: "Could not read the wallet balance.",
+    };
+  }
+
+  const network = await provider.getNetwork();
+  const expectedChainId = BigInt(config.chain.chainId);
+  if (BigInt(network.chainId) !== expectedChainId) {
+    return {
+      status: "unknown",
+      address,
+      balance,
+      estimatedCost: null,
+      error: `Connected wallet is on chain ${network.chainId}, but MandiMint requires chain ${expectedChainId.toString()}.`,
+    };
+  }
+
+  let feeData: { maxFeePerGas?: bigint | null; gasPrice?: bigint | null };
+  try {
+    feeData = await provider.getFeeData();
+  } catch {
+    return {
+      status: "unknown",
+      address,
+      balance,
+      estimatedCost: null,
+      error: "Could not read network fee data.",
+    };
+  }
+
+  const maxFeePerGas = feeData.maxFeePerGas ?? feeData.gasPrice ?? null;
+  if (!maxFeePerGas) {
+    return {
+      status: "unknown",
+      address,
+      balance,
+      estimatedCost: null,
+      error: "Network fee data is unavailable.",
+    };
+  }
+
+  const gasEstimate = 300000n;
+  const estimatedCost = gasEstimate * maxFeePerGas;
+  const safetyMargin = maxFeePerGas * BigInt(21000); // simple transfer buffer
+
+  if (balance > estimatedCost + safetyMargin) {
+    return {
+      status: "sufficient",
+      address,
+      balance,
+      estimatedCost,
+    };
+  }
+
+  return {
+    status: "insufficient",
+    address,
+    balance,
+    estimatedCost,
+  };
+}
+
+export async function submitRecordBatch(
+  walletOrSigner: SignerOrWallet,
+  params: RecordBatchParams,
+  targetNetworkId: NetworkId = "mstTestnet",
+): Promise<ContractTransactionResponse> {
+  const config = requireConfig(targetNetworkId);
+  const signer = await resolveSigner(walletOrSigner);
+  const provider = signer.provider;
+
+  if (!provider) {
+    throw new Error("The connected wallet did not expose an ethers provider.");
+  }
+
+  const network = await provider.getNetwork();
+  const expectedChainId = BigInt(config.chain.chainId);
+  if (BigInt(network.chainId) !== expectedChainId) {
+    throw new Error(
+      `Connected wallet is on chain ${network.chainId}, but ${targetNetworkId === "mstMainnet" ? "MST Mainnet" : "MST Testnet"} requires chain ${expectedChainId.toString()}.`,
     );
   }
 
@@ -176,20 +361,70 @@ export async function submitRecordBatch(
   )) as ContractTransactionResponse;
 }
 
-export function getExplorerTransactionUrl(hash: string): string | null {
-  const config = getMandiMintContractConfig();
-  if (!config?.chain.explorerUrl) {
-    return null;
-  }
-  return `${config.chain.explorerUrl.replace(/\/$/, "")}/tx/${hash}`;
+export interface VerifiedBatchRecord {
+  batchId: number;
+  cropId: number;
+  cropName: string;
+  mandiName: string;
+  totalQuantityKg: number;
+  salePriceInrPerTonne: number;
+  txHash?: string | null;
+  blockNumber?: number | null;
+  manager: string;
+  contractAddress?: string | null;
+  explorerUrl?: string | null;
+  status: string;
+  createdAt: number;
+  isSample?: boolean;
+  networkId?: string;
+  farmers: Array<{ address: string; quantityKg: number }>;
 }
 
-export function getExplorerAddressUrl(address: string): string | null {
-  const config = getMandiMintContractConfig();
-  if (!config?.chain.explorerUrl) {
-    return null;
+export function getSampleBatches(): VerifiedBatchRecord[] {
+  return defaultVerifiedBatches as unknown as VerifiedBatchRecord[];
+}
+
+export function getRecordedBatches(networkId: NetworkId = "mstTestnet"): VerifiedBatchRecord[] {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return [];
   }
-  return `${config.chain.explorerUrl.replace(/\/$/, "")}/address/${address}`;
+  try {
+    const storageKey = `mandimint_custom_batches_${networkId}`;
+    const raw = window.localStorage.getItem(storageKey);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getVerifiedBatches(networkId: NetworkId = "mstTestnet"): VerifiedBatchRecord[] {
+  // Retained for backwards compatibility. Sample batches are explicitly flagged with isSample: true and txHash: null.
+  // Mainnet returns an empty array to maintain strict data separation.
+  if (networkId === "mstTestnet") {
+    return defaultVerifiedBatches as unknown as VerifiedBatchRecord[];
+  }
+  return [];
+}
+
+export function getExplorerTransactionUrl(hash: string | null | undefined, networkId: NetworkId = "mstTestnet"): string | null {
+  if (!hash) return null;
+  const config = getMandiMintContractConfig(networkId);
+  const explorerUrl =
+    config?.chain.explorerUrl ||
+    (networkId === "mstMainnet"
+      ? "https://mstscan.com"
+      : "https://testnet.mstscan.com");
+  return `${explorerUrl.replace(/\/$/, "")}/tx/${hash}`;
+}
+
+export function getExplorerAddressUrl(address: string, networkId: NetworkId = "mstTestnet"): string | null {
+  const config = getMandiMintContractConfig(networkId);
+  const explorerUrl =
+    config?.chain.explorerUrl ||
+    (networkId === "mstMainnet"
+      ? "https://mstscan.com"
+      : "https://testnet.mstscan.com");
+  return `${explorerUrl.replace(/\/$/, "")}/address/${address}`;
 }
 
 function extractRevertData(error: unknown): string | null {
@@ -253,6 +488,13 @@ export function formatContractError(error: unknown): string {
     return "The transaction was rejected in your wallet.";
   }
 
+  if (
+    candidate.code === -32000 ||
+    candidate.message?.toLowerCase().includes("insufficient funds")
+  ) {
+    return "Insufficient native tMSTC for gas. Fund your connected wallet and try again.";
+  }
+
   let parsedName = candidate.revert?.name;
   let parsedArgs = candidate.revert?.args;
 
@@ -264,7 +506,7 @@ export function formatContractError(error: unknown): string {
         parsedName = parsed?.name;
         parsedArgs = parsed?.args;
       } catch {
-        // Fall through to the generic message below.
+        // Fall through to generic handler
       }
     }
   }
@@ -277,7 +519,7 @@ export function formatContractError(error: unknown): string {
     case "NotOwner":
       return "Only the contract owner can change manager authorization.";
     case "BatchAlreadyExists":
-      return `Batch ${args[0] ?? ""} is already recorded and cannot be replaced.`.trim();
+      return `Batch ${args[0] ?? ""} is already recorded on-chain and cannot be replaced.`.trim();
     case "BatchNotFound":
       return `No batch was found with ID ${args[0] ?? ""}.`.trim();
     case "AllocationTotalMismatch":

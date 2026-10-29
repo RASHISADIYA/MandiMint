@@ -1,3 +1,4 @@
+require("dotenv").config();
 require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-chai-matchers");
 
@@ -8,8 +9,12 @@ const { Wallet } = require("ethers");
 const MST_TESTNET_RPC_URL = "https://testnetrpc.mstblockchain.com";
 const MST_TESTNET_CHAIN_ID = 91562037;
 
-function readDeployerPrivateKey() {
-  const raw = process.env.MST_TESTNET_DEPLOYER_PRIVATE_KEY;
+// Official MST Mainnet defaults.
+const MST_MAINNET_RPC_URL = "https://mariorpc.mstblockchain.com/";
+const MST_MAINNET_CHAIN_ID = 4646;
+
+function readDeployerPrivateKey(envKey = "MST_TESTNET_DEPLOYER_PRIVATE_KEY") {
+  const raw = process.env[envKey];
   if (!raw || raw.trim().length === 0) {
     return null;
   }
@@ -23,7 +28,8 @@ function readDeployerPrivateKey() {
   return candidate;
 }
 
-const mstTestnetPrivateKey = readDeployerPrivateKey();
+const mstTestnetPrivateKey = readDeployerPrivateKey("MST_TESTNET_DEPLOYER_PRIVATE_KEY");
+const mstMainnetPrivateKey = readDeployerPrivateKey("MST_MAINNET_DEPLOYER_PRIVATE_KEY");
 
 const networks = {
   localhost: {
@@ -33,6 +39,11 @@ const networks = {
     url: process.env.MST_TESTNET_RPC_URL || MST_TESTNET_RPC_URL,
     chainId: MST_TESTNET_CHAIN_ID,
     accounts: mstTestnetPrivateKey ? [mstTestnetPrivateKey] : [],
+  },
+  mstMainnet: {
+    url: process.env.MST_MAINNET_RPC_URL || MST_MAINNET_RPC_URL,
+    chainId: MST_MAINNET_CHAIN_ID,
+    accounts: mstMainnetPrivateKey ? [mstMainnetPrivateKey] : [],
   },
 };
 

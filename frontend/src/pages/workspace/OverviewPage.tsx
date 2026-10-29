@@ -1,251 +1,93 @@
 import {
   ArrowRight,
   ClipboardPlus,
+  ExternalLink,
+  Flame,
+  Globe,
   History,
+  Layers,
   Search,
   ShieldCheck,
-  Sprout,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ROLE_LABELS } from "../../auth/roles";
-import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { WalletSetupCard } from "../../components/wallet/WalletSetupCard";
-import {
-  useFarmerHistory,
-  useManagerStatus,
-} from "../../hooks/useMandiMintReads";
+import { useManagerStatus } from "../../hooks/useMandiMintReads";
 import { useAuthoritativeRole } from "../../hooks/useAuthoritativeRole";
 import { useWalletOnboarding } from "../../hooks/useWalletOnboarding";
-import { formatPhoneNumber } from "../../auth/phone";
-import { formatQuantityKg, truncateAddress } from "../../lib/format";
+import { useWeb3Wallet } from "../../providers/Web3WalletContext";
+import {
+  getRecordedBatches,
+  getSampleBatches,
+} from "../../lib/blockchain/mandiMintContract";
+import { getExplorerTxUrl } from "../../config/networks";
+import { truncateAddress } from "../../lib/format";
+import { useMemo } from "react";
 
 export type DashboardMode = "farmer" | "manager";
 
-function AccountCard() {
-  const { profile, walletAddress, mstChain, networkVerification } =
-    useWalletOnboarding();
-  const { role, displayName, status, message, source } =
-    useAuthoritativeRole(true);
-
-  return (
-    <section className="mm-panel" aria-labelledby="account-title">
-      <div className="mm-panel__head">
-        <div>
-          <p className="mm-panel__eyebrow">Account</p>
-          <h2 id="account-title" className="mm-panel__title">
-            {displayName ??
-              formatPhoneNumber(profile?.phone ?? null) ??
-              profile?.email ??
-              "Signed in"}
-          </h2>
-        </div>
-        {status === "verified" && role ? (
-          <StatusBadge variant={source === "local" ? "warning" : "success"}>
-            {ROLE_LABELS[role]} {source === "local" ? "(local)" : "(verified)"}
-          </StatusBadge>
-        ) : (
-          <StatusBadge variant="warning">Role pending verification</StatusBadge>
-        )}
-      </div>
-
-      {status === "unconfigured" && message && (
-        <ErrorBanner message={message} />
-      )}
-
-      <dl className="mm-detail-list">
-        <div>
-          <dt>Application role</dt>
-          <dd>
-            {role
-              ? `${ROLE_LABELS[role]}${source === "local" ? " (local)" : ""}`
-              : source === "local"
-                ? "Unassigned — choose a local role"
-                : "Unassigned — server verification required"}
-          </dd>
-        </div>
-        <div>
-          <dt>Embedded wallet</dt>
-          <dd>
-            {walletAddress ? (
-              <code>{truncateAddress(walletAddress, 10, 8)}</code>
-            ) : (
-              "Not ready"
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>MST Testnet</dt>
-          <dd>
-            {networkVerification.status === "connected" && mstChain
-              ? `${mstChain.name} · chain ${mstChain.id} (verified)`
-              : mstChain
-                ? `${mstChain.name} · pending verification`
-                : "Not configured"}
-          </dd>
-        </div>
-      </dl>
-
-      <p className="mm-panel__note">
-        {source === "local"
-          ? "This role is a local workspace preference, not server-verified. On-chain manager permission is separate and still requires an authorized wallet."
-          : "Roles are assigned by the MandiMint backend. On-chain manager permission is separate and requires an authorized wallet."}
-      </p>
-    </section>
-  );
+interface OverviewPageProps {
+  dashboardMode?: DashboardMode;
+  mode?: DashboardMode;
 }
 
-function ManagerCard() {
+export function OverviewPage(_props?: OverviewPageProps) {
+  void _props;
   const { walletAddress } = useWalletOnboarding();
   const { role } = useAuthoritativeRole(true);
+  const web3 = useWeb3Wallet();
+
+  const activeAddress = web3.connected ? web3.address : walletAddress;
   const manager = useManagerStatus(
     role === "fpo_admin" ? walletAddress : null,
+    web3.selectedNetwork,
   );
 
-  if (role !== "fpo_admin") {
-    return null;
-  }
+  const recordedBatches = useMemo(() => {
+    return getRecordedBatches(web3.selectedNetwork);
+  }, [web3.selectedNetwork]);
 
-  return (
-    <section className="mm-panel" aria-labelledby="manager-title">
-      <div className="mm-panel__head">
-        <div>
-          <p className="mm-panel__eyebrow">FPO permission</p>
-          <h2 id="manager-title" className="mm-panel__title">
-            Manager authorization
-          </h2>
-        </div>
-        <ShieldCheck aria-hidden="true" className="mm-panel__icon" />
-      </div>
+  const sampleBatches = useMemo(() => {
+    return getSampleBatches();
+  }, []);
 
-      {!walletAddress ? (
-        <p className="mm-panel__text">
-          Your embedded wallet must be ready to check on-chain manager authorization.
-        </p>
-      ) : manager.status === "loading" ? (
-        <StatusBadge variant="pending">Checking contract…</StatusBadge>
-      ) : manager.status === "error" ? (
-        <ErrorBanner message={manager.error ?? "Could not read manager status."} />
-      ) : manager.data ? (
-        <>
-          <StatusBadge variant="success">Authorized manager</StatusBadge>
-          <p className="mm-panel__text">
-            This wallet can call <code>recordBatch</code> on the MandiMint contract.
-          </p>
-          <Link to="/app/manager/record" className="mm-text-link">
-            Record a batch <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-        </>
-      ) : (
-        <>
-          <StatusBadge variant="warning">Not an authorized manager</StatusBadge>
-          <p className="mm-panel__text">
-            This wallet can read public records but cannot write batches. Ask the
-            contract owner to authorize it with <code>setManager</code>.
-          </p>
-          <code className="mm-address">{walletAddress}</code>
-        </>
-      )}
-    </section>
-  );
-}
-
-function FarmerSnapshotCard() {
-  const { walletAddress } = useWalletOnboarding();
-  const { role } = useAuthoritativeRole(true);
-  const history = useFarmerHistory(
-    role === "farmer" ? walletAddress : null,
-  );
-
-  if (role !== "farmer") {
-    return null;
-  }
-
-  const totalKg =
-    history.data?.reduce((sum, row) => sum + row.quantityKg, 0n) ?? 0n;
-
-  return (
-    <section className="mm-panel" aria-labelledby="farmer-snapshot-title">
-      <div className="mm-panel__head">
-        <div>
-          <p className="mm-panel__eyebrow">Your records</p>
-          <h2 id="farmer-snapshot-title" className="mm-panel__title">
-            Allocation snapshot
-          </h2>
-        </div>
-        <Sprout aria-hidden="true" className="mm-panel__icon" />
-      </div>
-
-      {!walletAddress ? (
-        <p className="mm-panel__text">
-          Your embedded wallet address is used to read on-chain allocation history.
-        </p>
-      ) : history.status === "loading" ? (
-        <StatusBadge variant="pending">Reading contract…</StatusBadge>
-      ) : history.status === "error" ? (
-        <ErrorBanner message={history.error ?? "Could not read farmer history."} />
-      ) : history.status === "unconfigured" ? (
-        <p className="mm-panel__text">
-          Farmer history becomes available when the contract is configured.
-        </p>
-      ) : (
-        <>
-          <div className="mm-stat-row">
-            <div>
-              <span className="mm-stat-row__value">
-                {history.data?.length ?? 0}
-              </span>
-              <span className="mm-stat-row__label">recorded batches</span>
-            </div>
-            <div>
-              <span className="mm-stat-row__value">{formatQuantityKg(totalKg)}</span>
-              <span className="mm-stat-row__label">total allocated</span>
-            </div>
-          </div>
-          <Link to="/app/farmer/history" className="mm-text-link">
-            View farmer history <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-        </>
-      )}
-    </section>
-  );
-}
-
-export function OverviewPage({ dashboardMode }: { dashboardMode: DashboardMode }) {
-  const { role } = useAuthoritativeRole(true);
+  const isManagerOrOwner = web3.connected
+    ? web3.isManager || web3.isOwner
+    : manager.data === true;
 
   const actions = [
-    ...(role === "fpo_admin"
-      ? [
-          {
-            to: "/app/manager/record",
-            title: "Record a batch",
-            description:
-              "Submit a validated batch with farmer wallet allocations.",
-            icon: ClipboardPlus,
-          },
-        ]
-      : []),
+    {
+      to: "/app/manager/record",
+      title: "Record a batch",
+      description: web3.isContractConfigured
+        ? "Submit an on-chain batch with validated farmer allocations."
+        : `Deployment pending on ${web3.selectedNetworkConfig.name}.`,
+      icon: ClipboardPlus,
+      highlight: isManagerOrOwner && web3.isContractConfigured,
+    },
     {
       to: "/app/batches",
-      title: "Find a batch",
-      description: "Look up a recorded batch by its numeric ID.",
+      title: "Batch Explorer",
+      description: "Inspect on-chain batches and cryptographic proofs.",
       icon: Search,
+      highlight: false,
     },
-    ...(role === "farmer"
-      ? [
-          {
-            to: "/app/farmer/history",
-            title: "My allocation history",
-            description: "Review batches linked to your embedded wallet.",
-            icon: History,
-          },
-        ]
-      : []),
+    {
+      to: "/app/farmer/history",
+      title: "Farmer History",
+      description: "Review crop sales and allocations linked to any wallet.",
+      icon: History,
+      highlight: false,
+    },
+    {
+      to: "/app/manager/authorize",
+      title: "Manager Authorization",
+      description: "Owner administration for authorizing batch manager wallets.",
+      icon: ShieldCheck,
+      highlight: false,
+    },
   ];
-
-  const isManagerView = dashboardMode === "manager";
 
   return (
     <div className="mm-page">
@@ -253,45 +95,261 @@ export function OverviewPage({ dashboardMode }: { dashboardMode: DashboardMode }
         <div>
           <p className="mm-page-head__eyebrow">
             <UserRound size={14} aria-hidden="true" />
-            {isManagerView ? "FPO manager workspace" : "Farmer workspace"}
+            Agricultural Produce Traceability Dashboard
           </p>
           <h1 className="mm-page-head__title">
-            {isManagerView
-              ? "Publish clear, validated batch records."
-              : "Your crop records, linked to your wallet."}
+            MandiMint · {web3.selectedNetworkConfig.name} Workspace
           </h1>
           <p className="mm-page-head__lead">
-            MandiMint stores batch and allocation records on MST Testnet. It does
-            not move money, hold escrow, or store phone numbers on-chain.
+            Tamper-evident recordkeeping for agricultural crop sale batches,
+            mandi prices, and farmer allocations on MST Blockchain.
           </p>
         </div>
-        {role === "fpo_admin" && isManagerView && (
-          <Link to="/app/manager/record" className="mm-primary-link">
-            <ClipboardPlus size={16} aria-hidden="true" />
-            Record batch
-          </Link>
-        )}
+        <div className="mm-workspace__chip">
+          <Wallet size={14} aria-hidden="true" />
+          <span>
+            {activeAddress
+              ? truncateAddress(activeAddress, 6, 4)
+              : "No wallet connected"}
+          </span>
+          {web3.connected && (
+            <span style={{ color: "#059669", fontWeight: 700 }}>
+              · {web3.balance ?? "0.00"} {web3.selectedNetworkConfig.currency.symbol}
+            </span>
+          )}
+        </div>
       </header>
 
-      <div className="mm-overview-grid">
-        <AccountCard />
-        <WalletSetupCard />
-        <ManagerCard />
-        <FarmerSnapshotCard />
+      {/* Network & Contract Status Banner */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+          padding: "1rem 1.25rem",
+          background: web3.isMainnet
+            ? "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)"
+            : "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+          border: web3.isMainnet ? "1px solid #fde68a" : "1px solid #a7f3d0",
+          borderRadius: "12px",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: "0 0 0.25rem 0",
+              fontSize: "0.8rem",
+              color: web3.isMainnet ? "#92400e" : "#065f46",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {web3.isMainnet ? "🟡" : "🟢"} {web3.selectedNetworkConfig.name} · Chain ID: {web3.selectedNetworkConfig.chainId}
+          </p>
+          <p style={{ margin: 0, fontSize: "0.875rem", color: "#1f2937" }}>
+            {web3.selectedNetworkConfig.contractAddress ? (
+              <>
+                Verified Contract:{" "}
+                <a
+                  href={`${web3.selectedNetworkConfig.explorerUrl.replace(/\/$/, "")}/address/${web3.selectedNetworkConfig.contractAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontFamily: "monospace",
+                    color: web3.isMainnet ? "#b45309" : "#059669",
+                    fontWeight: 600,
+                    textDecoration: "underline",
+                  }}
+                >
+                  {web3.selectedNetworkConfig.contractAddress}
+                </a>
+              </>
+            ) : (
+              <span style={{ color: "#92400e", fontWeight: 600 }}>
+                Smart Contract Undeployed on Mainnet (Read-Only Mode)
+              </span>
+            )}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          {web3.isTestnet && web3.selectedNetworkConfig.faucetUrl && (
+            <a
+              href={web3.selectedNetworkConfig.faucetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mm-btn mm-btn--secondary"
+              style={{
+                fontSize: "0.8rem",
+                padding: "0.4rem 0.75rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.3rem",
+              }}
+            >
+              <Flame size={14} /> Claim Free tMSTC
+            </a>
+          )}
+          {web3.isMainnet && !web3.isContractConfigured && (
+            <button
+              type="button"
+              onClick={web3.switchToMstTestnet}
+              className="mm-btn mm-btn--primary"
+              style={{
+                fontSize: "0.8rem",
+                padding: "0.4rem 0.75rem",
+              }}
+            >
+              Switch to MST Testnet (Verified Contract) →
+            </button>
+          )}
+          <a
+            href={web3.selectedNetworkConfig.explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mm-btn mm-btn--outline"
+            style={{
+              fontSize: "0.8rem",
+              padding: "0.4rem 0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.3rem",
+            }}
+          >
+            <Globe size={14} /> {web3.selectedNetworkConfig.name} Explorer <ExternalLink size={12} />
+          </a>
+        </div>
       </div>
 
+      <div className="mm-overview-grid">
+        {/* Wallet & Role Status Card */}
+        <section className="mm-panel">
+          <div className="mm-panel__head">
+            <div>
+              <p className="mm-panel__eyebrow">Wallet &amp; Authorization</p>
+              <h2 className="mm-panel__title">
+                {web3.connected ? "Connected Wallet" : "Web3 Connection"}
+              </h2>
+            </div>
+            {web3.connected ? (
+              <StatusBadge variant="success">Active</StatusBadge>
+            ) : (
+              <StatusBadge variant="neutral">Disconnected</StatusBadge>
+            )}
+          </div>
+
+          <dl className="mm-details-list">
+            <div>
+              <dt>Address</dt>
+              <dd>
+                {activeAddress ? (
+                  <code>{truncateAddress(activeAddress, 10, 8)}</code>
+                ) : (
+                  "Connect wallet to interact"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Network</dt>
+              <dd>
+                {web3.connected
+                  ? `${web3.networkName || "MST Testnet"} (Chain ${web3.chainId})`
+                  : "MST Testnet (91562037)"}
+              </dd>
+            </div>
+            <div>
+              <dt>Contract Role</dt>
+              <dd>
+                {web3.isOwner
+                  ? "Contract Owner & Administrator"
+                  : web3.isManager
+                  ? "Authorized Batch Manager (On-Chain)"
+                  : activeAddress
+                  ? "Public / Farmer View"
+                  : "None"}
+              </dd>
+            </div>
+            <div>
+              <dt>Balance</dt>
+              <dd>
+                {web3.connected
+                  ? `${web3.balance ?? "0.00"} ${web3.isTestnet ? "tMSTC" : "MSTC"}`
+                  : "Connect wallet to view"}
+              </dd>
+            </div>
+          </dl>
+
+          {!web3.connected && (
+            <div style={{ marginTop: "1rem" }}>
+              <button
+                type="button"
+                className="mm-btn mm-btn--primary"
+                onClick={web3.connectBridgeKey}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                Connect Wallet
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Contract Statistics Card */}
+        <section className="mm-panel">
+          <div className="mm-panel__head">
+            <div>
+              <p className="mm-panel__eyebrow">Smart Contract Metrics</p>
+              <h2 className="mm-panel__title">On-Chain Activity</h2>
+            </div>
+            <Layers aria-hidden="true" className="mm-panel__icon" />
+          </div>
+
+          <div className="mm-stat-grid" style={{ marginBottom: "1rem" }}>
+            <div className="mm-dashboard-stat-card">
+              <span className="mm-dashboard-stat-card__label">Recorded On-Chain Batches</span>
+              <span className="mm-dashboard-stat-card__value">
+                {recordedBatches.length}
+              </span>
+            </div>
+            <div className="mm-dashboard-stat-card">
+              <span className="mm-dashboard-stat-card__label">Total Crops Traced</span>
+              <span className="mm-dashboard-stat-card__value">
+                {recordedBatches.reduce((acc, b) => acc + (b.totalQuantityKg || 0), 0).toLocaleString()} kg
+              </span>
+            </div>
+          </div>
+
+          <p className="mm-panel__text" style={{ fontSize: "0.85rem", color: "#52645b" }}>
+            All on-chain batch records enforce whole-kilogram conservation and nonzero constraints.
+            Farmer allocations are immutable and publicly auditable on {web3.selectedNetworkConfig.name}.
+          </p>
+
+          <Link to="/app/batches" className="mm-text-link">
+            Explore all recorded batches <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </section>
+      </div>
+
+      {/* Quick Action Cards */}
       <section className="mm-quick-actions" aria-labelledby="actions-title">
         <div className="mm-section-row">
           <div>
-            <p className="mm-panel__eyebrow">Next steps</p>
+            <p className="mm-panel__eyebrow">Quick Navigation</p>
             <h2 id="actions-title" className="mm-panel__title">
               What would you like to do?
             </h2>
           </div>
         </div>
         <div className="mm-action-grid">
-          {actions.map(({ to, title, description, icon: Icon }) => (
-            <Link key={to} to={to} className="mm-action-card">
+          {actions.map(({ to, title, description, icon: Icon, highlight }) => (
+            <Link
+              key={to}
+              to={to}
+              className="mm-action-card"
+              style={highlight ? { borderColor: "#10b981", background: "#f9fdfa" } : undefined}
+            >
               <span className="mm-action-card__icon" aria-hidden="true">
                 <Icon />
               </span>
@@ -305,11 +363,210 @@ export function OverviewPage({ dashboardMode }: { dashboardMode: DashboardMode }
         </div>
       </section>
 
-      {!role && (
-        <div className="mm-inline-hint">
-          Dashboard actions stay limited until a backend-verified or local workspace role is available.
+      {/* Recorded Batches On-Chain Table / Empty State */}
+      <section className="mm-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="mm-panel__head">
+          <div>
+            <p className="mm-panel__eyebrow">On-Chain Activity</p>
+            <h2 className="mm-panel__title">
+              Recorded Batches on {web3.selectedNetworkConfig.name}
+            </h2>
+          </div>
+          <StatusBadge variant={recordedBatches.length > 0 ? "success" : "neutral"}>
+            {recordedBatches.length > 0 ? `${recordedBatches.length} Batches On-Chain` : "No Records"}
+          </StatusBadge>
         </div>
-      )}
+
+        {recordedBatches.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "2.5rem 1.5rem",
+              background: "#f9fafb",
+              borderRadius: "8px",
+              border: "1px dashed #d1d5db",
+              marginTop: "0.75rem",
+            }}
+          >
+            <p style={{ fontSize: "1.75rem", margin: "0 0 0.5rem 0" }}>🌾</p>
+            <h3 style={{ margin: "0 0 0.5rem 0", color: "#374151", fontSize: "1.1rem" }}>
+              No Batches Registered on {web3.selectedNetworkConfig.name}
+            </h3>
+            <p style={{ margin: "0 auto 1.5rem auto", maxWidth: "520px", color: "#6b7280", fontSize: "0.875rem" }}>
+              {web3.isMainnet
+                ? "MandiMint is prepared for MST Mainnet release, but smart contract deployment has not occurred yet. Switch to MST Testnet to record and inspect live batches."
+                : "No batches have been recorded on MST Testnet by your workspace yet. Authorized FPO managers can record batches with immutable farmer allocations."}
+            </p>
+            {web3.isMainnet ? (
+              <button
+                type="button"
+                onClick={web3.switchToMstTestnet}
+                className="mm-btn mm-btn--primary"
+              >
+                Switch to MST Testnet (91562037) →
+              </button>
+            ) : isManagerOrOwner ? (
+              <Link to="/app/manager/record" className="mm-btn mm-btn--primary">
+                Record a Batch on MST Testnet →
+              </Link>
+            ) : (
+              <Link to="/app/batches" className="mm-btn mm-btn--outline">
+                Query Batch ID on Smart Contract →
+              </Link>
+            )}
+          </div>
+        ) : (
+          <>
+            <p className="mm-panel__text">
+              These crop batches have been recorded on the MandiMint smart contract with
+              tamper-evident farmer quantity allocations:
+            </p>
+
+            <div style={{ overflowX: "auto" }}>
+              <table className="mm-table" style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left", fontSize: "0.8rem", color: "#6b7280" }}>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>BATCH ID</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>CROP</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>MANDI MARKET</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>QUANTITY</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>PRICE / TONNE</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>FARMERS</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>EXPLORER</th>
+                    <th style={{ padding: "0.75rem 0.5rem" }}>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recordedBatches.map((batch) => (
+                    <tr key={batch.batchId} style={{ borderBottom: "1px solid #f3f4f6", fontSize: "0.85rem" }}>
+                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 700, color: "#174c3c" }}>
+                        #{batch.batchId}
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
+                        {batch.cropName}
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem", color: "#52645b" }}>
+                        {batch.mandiName}
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
+                        {batch.totalQuantityKg.toLocaleString()} kg
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                        ₹{batch.salePriceInrPerTonne.toLocaleString()}
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                        <span className="mm-tag mm-tag--gold">
+                          {batch.farmers.length} Farmers
+                        </span>
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                        {batch.txHash ? (
+                          <a
+                            href={getExplorerTxUrl(web3.selectedNetwork, batch.txHash)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mm-inline-link"
+                            style={{ fontSize: "0.75rem" }}
+                          >
+                            MSTScan <ExternalLink size={10} aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>Contract State</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                        <Link
+                          to={`/app/batches/${batch.batchId}`}
+                          className="mm-btn mm-btn--outline"
+                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                        >
+                          View Details →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Illustrative Sample Data Section (Clearly Labelled - Not On-Chain) */}
+      <section className="mm-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="mm-panel__head">
+          <div>
+            <p className="mm-panel__eyebrow">Prototype Demonstration Model</p>
+            <h2 className="mm-panel__title">
+              Illustrative Sample Data — Not On-Chain
+            </h2>
+          </div>
+          <StatusBadge variant="neutral">Offline Sample Model</StatusBadge>
+        </div>
+
+        <p className="mm-panel__text" style={{ fontSize: "0.85rem", color: "#52645b" }}>
+          The following 3 sample records illustrate how crop batches, mandi market prices, and
+          farmer allocations appear in MandiMint. They are demonstration examples and have not
+          been broadcast to the {web3.selectedNetworkConfig.name} blockchain:
+        </p>
+
+        <div style={{ overflowX: "auto" }}>
+          <table className="mm-table" style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left", fontSize: "0.8rem", color: "#6b7280" }}>
+                <th style={{ padding: "0.75rem 0.5rem" }}>SAMPLE ID</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>CROP</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>MANDI MARKET</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>QUANTITY</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>PRICE / TONNE</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>FARMERS</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>DATA STATUS</th>
+                <th style={{ padding: "0.75rem 0.5rem" }}>INSPECT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sampleBatches.map((batch) => (
+                <tr key={batch.batchId} style={{ borderBottom: "1px solid #f3f4f6", fontSize: "0.85rem" }}>
+                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 700, color: "#475569" }}>
+                    #{batch.batchId}
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
+                    {batch.cropName}
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem", color: "#52645b" }}>
+                    {batch.mandiName}
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
+                    {batch.totalQuantityKg.toLocaleString()} kg
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem" }}>
+                    ₹{batch.salePriceInrPerTonne.toLocaleString()}
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem" }}>
+                    <span className="mm-tag mm-tag--neutral">
+                      {batch.farmers.length} Farmers
+                    </span>
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#64748b", background: "#f1f5f9", padding: "0.2rem 0.45rem", borderRadius: "4px" }}>
+                      Illustrative Sample (Offline)
+                    </span>
+                  </td>
+                  <td style={{ padding: "0.75rem 0.5rem" }}>
+                    <Link
+                      to={`/app/batches/${batch.batchId}`}
+                      className="mm-btn mm-btn--outline"
+                      style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                    >
+                      Inspect Sample →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

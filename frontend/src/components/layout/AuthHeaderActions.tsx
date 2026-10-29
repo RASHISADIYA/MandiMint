@@ -1,45 +1,43 @@
-import { usePrivy } from "@privy-io/react-auth";
 import { Link } from "react-router-dom";
-import { isPrivyConfigured } from "../../config/env";
-import { AccountMenu } from "../account/AccountMenu";
-import { Button } from "../ui/Button";
-
-function SignedOutActions() {
-  return (
-    <>
-      <Link to="/auth" className="mm-btn mm-btn--ghost mm-header-signin">
-        Sign In
-      </Link>
-      <Link to="/auth" className="mm-btn mm-btn--primary mm-header-cta">
-        Get Started
-      </Link>
-    </>
-  );
-}
-
-function PrivyHeaderActions() {
-  const { ready, authenticated } = usePrivy();
-
-  if (!ready) {
-    return (
-      <Button variant="ghost" type="button" disabled aria-busy="true">
-        Loading…
-      </Button>
-    );
-  }
-
-  if (!authenticated) {
-    return <SignedOutActions />;
-  }
-
-  return <AccountMenu compact />;
-}
+import { ConnectWalletButton } from "../wallet/ConnectWalletButton";
+import { NetworkSelector } from "../network/NetworkSelector";
+import { useWeb3Wallet } from "../../providers/Web3WalletContext";
+import { useAuthoritativeRole } from "../../hooks/useAuthoritativeRole";
 
 export function AuthHeaderActions() {
-  if (!isPrivyConfigured()) {
-    return <SignedOutActions />;
-  }
-  return <PrivyHeaderActions />;
+  const { connected } = useWeb3Wallet();
+  const { role } = useAuthoritativeRole(connected);
+
+  const dashboardTarget = role === "farmer"
+    ? "/app/farmer"
+    : role === "fpo_admin"
+    ? "/app/manager"
+    : "/onboarding";
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <Link
+        to="/app/batches"
+        className="mm-btn mm-btn--ghost"
+        style={{ padding: "0.45rem 0.85rem", fontSize: "0.85rem" }}
+      >
+        Batch Explorer
+      </Link>
+
+      {connected && (
+        <Link
+          to={dashboardTarget}
+          className="mm-btn mm-btn--primary"
+          style={{ padding: "0.45rem 0.85rem", fontSize: "0.85rem" }}
+        >
+          {role ? "My Dashboard" : "Select Role"}
+        </Link>
+      )}
+
+      <NetworkSelector />
+      <ConnectWalletButton />
+    </div>
+  );
 }
 
 export function AuthHeaderActionsFallback() {

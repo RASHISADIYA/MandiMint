@@ -1,91 +1,154 @@
 import {
   ArrowRight,
   ClipboardList,
+  ExternalLink,
   Eye,
+  Flame,
+  Globe,
+  Layers,
   Leaf,
   Link2,
   Shield,
-  Smartphone,
+  Sparkles,
   Store,
   Users,
-  Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { isPrivyConfigured } from "../config/env";
-import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { StatusBadge } from "../components/ui/StatusBadge";
+import { ConnectWalletButton } from "../components/wallet/ConnectWalletButton";
+import { useWeb3Wallet, MST_NETWORKS } from "../providers/Web3WalletContext";
+import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
+import { getVerifiedBatches } from "../lib/blockchain/mandiMintContract";
 import "./landing.css";
 
 export function LandingPage() {
+  const verifiedBatches = getVerifiedBatches();
+  const { connected } = useWeb3Wallet();
+  const { role } = useAuthoritativeRole(connected);
+
+  const dashboardTarget = role === "farmer"
+    ? "/app/farmer"
+    : role === "fpo_admin"
+    ? "/app/manager"
+    : "/onboarding";
+
   return (
     <>
+      {/* Hero Section */}
       <section id="home" className="mm-hero mm-container" aria-labelledby="hero-title">
         <div className="mm-hero__grid">
           <div>
-            <p className="mm-hero__eyebrow">
-              <Leaf size={14} aria-hidden="true" />
-              MST Testnet recordkeeping
-            </p>
-            <h1 id="hero-title" className="mm-hero__title">
-              A Smarter, More Transparent Agricultural Marketplace
-            </h1>
-            <p className="mm-hero__lead">
-              Bringing farmers and market participants closer through a simpler digital
-              experience, with transparency and trust at its core. MandiMint records crop
-              sale batches and farmer quantity allocations on-chain for auditable
-              recordkeeping—without handling payments or storing personal data.
-            </p>
-            <div className="mm-hero__actions">
-              <Link to="/auth" className="mm-btn mm-btn--primary">
-                <Smartphone size={16} aria-hidden="true" />
-                Sign in with phone
-              </Link>
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() =>
-                  document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
-                }
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+              <span className="mm-tag mm-tag--gold" style={{ fontSize: "0.75rem", padding: "0.25rem 0.6rem" }}>
+                🏆 MST Buildathon 2.0 Project
+              </span>
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  background: "var(--color-success-bg)",
+                  color: "var(--color-success)",
+                  padding: "0.25rem 0.6rem",
+                  borderRadius: "4px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
+                }}
               >
-                Learn How It Works
-              </Button>
+                <span className="mm-status-dot mm-status-dot--green" />
+                Live on MST Testnet (91562037)
+              </span>
             </div>
-            <p className="mm-hero__note">
-              On-chain data includes batch details, crop identifiers, quantities in whole
-              kilograms, sale price in INR per metric tonne, and farmer wallet addresses only.
-              A separate embedded wallet is created after phone verification.
+
+            <h1 id="hero-title" className="mm-hero__title" style={{ lineHeight: 1.15 }}>
+              Traceable crop batches, verified farmer allocations
+            </h1>
+
+            <p className="mm-hero__lead">
+              MandiMint provides an auditable, append-only recordkeeping system for agricultural
+              produce market committees (mandis) and Farmer Producer Organizations (FPOs) on the
+              high-performance <strong>MST Blockchain</strong>.
             </p>
+
+            {/* Single Clear Entry Point */}
+            <div className="mm-hero__actions" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+              {connected ? (
+                <Link to={dashboardTarget} className="mm-btn mm-btn--primary" style={{ padding: "0.65rem 1.25rem" }}>
+                  Go to {role ? (role === "farmer" ? "Farmer Dashboard" : "FPO Dashboard") : "Role Selection"} <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              ) : (
+                <ConnectWalletButton variant="primary" />
+              )}
+              <Link to="/app/batches" className="mm-btn mm-btn--outline" style={{ padding: "0.65rem 1rem" }}>
+                <Layers size={16} /> Batch Explorer
+              </Link>
+            </div>
+
+            <div style={{ marginTop: "1rem", display: "flex", gap: "1rem", alignItems: "center", fontSize: "0.8rem", color: "#64748b" }}>
+              <span>
+                Verified Contract:{" "}
+                <a
+                  href="https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#059669", fontWeight: 600, textDecoration: "underline" }}
+                >
+                  0x06289D...5679C
+                </a>
+              </span>
+              <span>·</span>
+              <a
+                href={MST_NETWORKS.testnet.faucetUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#ea580c", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+              >
+                <Flame size={13} /> Claim Free tMSTC
+              </a>
+            </div>
           </div>
-          <aside className="mm-hero-visual" aria-label="Record flow overview">
+
+          {/* Visual Hero Panel with Agricultural Image & Translucent Treatment */}
+          <aside
+            className="mm-hero-visual"
+            style={{
+              backgroundImage: `linear-gradient(rgba(247, 246, 239, 0.88), rgba(247, 246, 239, 0.94)), url('/agriculture_hero.jpg')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              border: "1px solid var(--color-borders)",
+              boxShadow: "0 8px 30px rgba(33, 78, 52, 0.08)",
+            }}
+            aria-label="Record flow overview"
+          >
             <div className="mm-hero-visual__badge">
-              <StatusBadge variant="neutral">Append-only records</StatusBadge>
+              <StatusBadge variant="success">MST Blockchain Native</StatusBadge>
             </div>
             <div className="mm-hero-visual__diagram">
               <div className="mm-hero-visual__row">
                 <Store className="mm-hero-visual__row-icon" size={22} aria-hidden="true" />
                 <div>
-                  <p className="mm-hero-visual__row-title">Authorized manager</p>
+                  <p className="mm-hero-visual__row-title">Authorized FPO Manager</p>
                   <p className="mm-hero-visual__row-text">
-                    Records a batch with validated farmer allocations
+                    Signs sale batch with strict whole-kg farmer allocation conservation
                   </p>
                 </div>
               </div>
               <div className="mm-hero-visual__row">
                 <Link2 className="mm-hero-visual__row-icon" size={22} aria-hidden="true" />
                 <div>
-                  <p className="mm-hero-visual__row-title">On-chain batch</p>
+                  <p className="mm-hero-visual__row-title">MST Blockchain Smart Contract</p>
                   <p className="mm-hero-visual__row-text">
-                    Public, tamper-evident history on MST Testnet
+                    Permanent cryptographic timestamp and immutable proof of delivery
                   </p>
                 </div>
               </div>
               <div className="mm-hero-visual__row">
                 <Users className="mm-hero-visual__row-icon" size={22} aria-hidden="true" />
                 <div>
-                  <p className="mm-hero-visual__row-title">Farmer history</p>
+                  <p className="mm-hero-visual__row-title">Farmer &amp; Public Transparency</p>
                   <p className="mm-hero-visual__row-text">
-                    Query allocations by wallet address over time
+                    Instant auditability on MSTScan without storing PII on-chain
                   </p>
                 </div>
               </div>
@@ -94,146 +157,230 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section
-        id="how-it-works"
-        className="mm-section mm-container"
-        aria-labelledby="how-title"
-      >
+      {/* MST Buildathon 2.0 Verification Hub */}
+      <section className="mm-section mm-container" style={{ paddingTop: "1rem" }}>
+        <div
+          style={{
+            background: "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)",
+            color: "#ffffff",
+            borderRadius: "16px",
+            padding: "2rem",
+            boxShadow: "0 20px 40px rgba(6, 78, 59, 0.25)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <span
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  color: "#fef08a",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  padding: "0.25rem 0.6rem",
+                  borderRadius: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Mandatory Track Requirements
+              </span>
+              <h2 style={{ margin: "0.5rem 0 0.25rem 0", fontSize: "1.75rem", color: "#ffffff", fontWeight: 800 }}>
+                MST Buildathon Verification Hub
+              </h2>
+              <p style={{ margin: 0, color: "#a7f3d0", fontSize: "0.95rem", maxWidth: "600px" }}>
+                Everything evaluators and judges need to independently inspect, test, and verify
+                MandiMint on the MST Blockchain network.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <a
+                href="https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mm-btn"
+                style={{ background: "#ffffff", color: "#064e3b", fontWeight: 700, fontSize: "0.85rem" }}
+              >
+                <Globe size={15} /> MSTScan Contract <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* 4 Track Requirement Cards */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: "1rem",
+              marginTop: "1.5rem",
+            }}
+          >
+            <div style={{ background: "rgba(255, 255, 255, 0.1)", borderRadius: "10px", padding: "1.25rem" }}>
+              <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.8rem", color: "#6ee7b7", fontWeight: 700 }}>
+                1. MEANINGFUL MST USAGE
+              </p>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#f0fdf4" }}>
+                Full agricultural batch traceability with on-chain equality constraints:
+                <code>∑(quantities) == totalQuantityKg</code>.
+              </p>
+            </div>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.1)", borderRadius: "10px", padding: "1.25rem" }}>
+              <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.8rem", color: "#6ee7b7", fontWeight: 700 }}>
+                2. TESTNET + MAINNET READY
+              </p>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#f0fdf4" }}>
+                Deployed on MST Testnet (Chain ID 91562037). Mainnet deployment script and configs baked in.
+              </p>
+            </div>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.1)", borderRadius: "10px", padding: "1.25rem" }}>
+              <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.8rem", color: "#6ee7b7", fontWeight: 700 }}>
+                3. WEB3 WALLET INTEGRATION
+              </p>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#f0fdf4" }}>
+                BridgeKey, MetaMask, and standard EIP-1193 wallets supported for 1-click connect, network verification, and transaction signing.
+              </p>
+            </div>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.1)", borderRadius: "10px", padding: "1.25rem" }}>
+              <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.8rem", color: "#6ee7b7", fontWeight: 700 }}>
+                4. AUDITABLE ALLOCATIONS
+              </p>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#f0fdf4" }}>
+                Smart contract enforces strict whole-kg conservation: sum of farmer allocations must equal total batch weight before confirmation.
+              </p>
+            </div>
+          </div>
+
+          {/* Illustrative Sample Data Section (Clearly Labelled - Not On-Chain) */}
+          <div style={{ marginTop: "1.5rem", background: "rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+              <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 700, color: "#fef08a" }}>
+                ILLUSTRATIVE SAMPLE DATA — NOT ON-CHAIN:
+              </p>
+              <span style={{ fontSize: "0.75rem", color: "#a7f3d0" }}>
+                Prototype demonstration model · Not recorded on-chain
+              </span>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#a7f3d0", borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+                    <th style={{ padding: "0.4rem" }}>Batch</th>
+                    <th style={{ padding: "0.4rem" }}>Commodity</th>
+                    <th style={{ padding: "0.4rem" }}>Market Mandi</th>
+                    <th style={{ padding: "0.4rem" }}>Quantity</th>
+                    <th style={{ padding: "0.4rem" }}>Farmers</th>
+                    <th style={{ padding: "0.4rem" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {verifiedBatches.map((b) => (
+                    <tr key={b.batchId} style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                      <td style={{ padding: "0.5rem 0.4rem", fontWeight: 700 }}>#{b.batchId}</td>
+                      <td style={{ padding: "0.5rem 0.4rem" }}>{b.cropName}</td>
+                      <td style={{ padding: "0.5rem 0.4rem", color: "#e2e8f0" }}>{b.mandiName}</td>
+                      <td style={{ padding: "0.5rem 0.4rem", fontWeight: 600 }}>{b.totalQuantityKg.toLocaleString()} kg</td>
+                      <td style={{ padding: "0.5rem 0.4rem" }}>{b.farmers.length} Farmers</td>
+                      <td style={{ padding: "0.5rem 0.4rem" }}>
+                        <span style={{ color: "#fef08a", fontSize: "0.75rem", background: "rgba(254, 240, 138, 0.15)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>
+                          Illustrative Sample (Offline)
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#d1fae5", flexWrap: "wrap", gap: "0.5rem" }}>
+              <span>Live batches are queried directly from the smart contract on MST Testnet (Chain #91562037).</span>
+              <Link to="/app/batches" style={{ color: "#fef08a", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                Open Batch Explorer →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="mm-section mm-container" aria-labelledby="how-title">
         <header className="mm-section-header">
           <h2 id="how-title" className="mm-section-title">
             How MandiMint works
           </h2>
           <p className="mm-section-lead">
-            The MVP smart contract focuses on structured, validated records. Managers submit
-            batches; anyone can read batch and allocation data through the contract.
+            Structured, validated on-chain recordkeeping. Authorized managers submit
+            batches; anyone can audit farmer allocations through the smart contract.
           </p>
         </header>
         <div className="mm-card-grid mm-card-grid--3">
           <Card
             icon={<ClipboardList aria-hidden="true" />}
-            title="1. Record a batch"
-            description="An authorized manager calls recordBatch with crop ID, total quantity (kg), price (INR/tonne), and farmer allocation arrays."
+            title="Step 1: Record Batch"
+            description="An authorized manager calls recordBatch with commodity ID, total quantity (kg), sale price (INR/tonne), and individual farmer allocations."
           />
           <Card
             icon={<Shield aria-hidden="true" />}
-            title="2. Validation on-chain"
-            description="The contract checks nonzero IDs, unique farmers, and that allocation sums match the batch total before anything is stored."
+            title="Step 2: On-Chain Constraints"
+            description="The contract validates nonzero values, duplicate farmer prevention, and mathematically enforces that farmer allocation quantities sum exactly to the total batch weight."
           />
           <Card
             icon={<Eye aria-hidden="true" />}
-            title="3. Read & audit"
-            description="Use getBatch, getBatchAllocations, and getFarmerBatches to review history. No updates or deletes—records are append-only."
+            title="Step 3: Public Ledger Audit"
+            description="Query getBatch, getBatchAllocations, or getFarmerBatches anytime. Records are append-only, tamper-evident, and open to farmers and financial institutions."
           />
         </div>
       </section>
 
+      {/* Benefits Section */}
       <section id="benefits" className="mm-section mm-container" aria-labelledby="benefits-title">
         <header className="mm-section-header">
           <h2 id="benefits-title" className="mm-section-title">
-            Benefits for participants
+            Real-World Impact for Indian Agriculture
           </h2>
           <p className="mm-section-lead">
-            MandiMint supports operational transparency. It does not settle payments, hold
-            escrow, or verify real-world crop quality—that remains off-chain.
+            Eliminating reconciliation disputes between FPOs, APMC Mandis, and smallholder farmers.
           </p>
         </header>
-        <div className="mm-card-grid mm-card-grid--2">
-          <Card title="For farmers" icon={<Leaf aria-hidden="true" />}>
+        <div className="mm-card-grid mm-card-grid--3">
+          <Card title="For Smallholder Farmers" icon={<Leaf aria-hidden="true" />}>
             <p>
-              Wallet-linked allocation history helps demonstrate participation in recorded
-              batches. Addresses are public identifiers; no names or contact details are stored
-              on-chain.
+              Wallet-linked verifiable proof of harvest delivery helps build digital credit
+              profiles for agricultural loans, crop insurance claims, and government subsidy verification.
             </p>
           </Card>
-          <Card title="For market participants" icon={<Store aria-hidden="true" />}>
+          <Card title="For FPOs &amp; Mandi Traders" icon={<Store aria-hidden="true" />}>
             <p>
-              Managers with authorization can publish consistent batch structures that others
-              can independently verify against the same contract rules and events.
+              Eliminates paper slip manipulation. Transparent aggregation gives buyers full
+              traceability back to individual farmer lots without revealing sensitive private identity data.
+            </p>
+          </Card>
+          <Card title="MST Blockchain Advantages" icon={<Sparkles aria-hidden="true" />}>
+            <p>
+              Ultra-fast block confirmation times, negligible gas fees paid in MSTC, and high
+              throughput make MST Blockchain the ideal EVM layer for high-volume agri-commodity recordkeeping.
             </p>
           </Card>
         </div>
       </section>
 
-      <section className="mm-section mm-container" aria-labelledby="trust-title">
-        <header className="mm-section-header">
-          <h2 id="trust-title" className="mm-section-title">
-            Transparency and trust
-          </h2>
-          <p className="mm-section-lead">
-            What the contract does—and does not—guarantee, per the project documentation.
-          </p>
-        </header>
-        <Card>
-          <ul className="mm-transparency-list">
-            <li>
-              <Shield size={18} aria-hidden="true" />
-              <span>
-                <strong>No fund transfers:</strong> The contract does not move tokens, hold
-                escrow, or calculate settled payments.
-              </span>
-            </li>
-            <li>
-              <Eye size={18} aria-hidden="true" />
-              <span>
-                <strong>Public read access:</strong> Batch and allocation data is readable by
-                anyone; farmer wallets are visible on the ledger.
-              </span>
-            </li>
-            <li>
-              <ClipboardList size={18} aria-hidden="true" />
-              <span>
-                <strong>Manager trust model:</strong> Structural validation is enforced
-                on-chain; accuracy of real-world data depends on authorized managers.
-              </span>
-            </li>
-          </ul>
-        </Card>
-      </section>
-
+      {/* Call to Action */}
       <section className="mm-section mm-container">
         <div className="mm-cta-panel">
-          <h2>Ready to explore MandiMint?</h2>
+          <h2>Experience MandiMint on MST Blockchain</h2>
           <p>
-            Verify your phone, then complete wallet, network, and role checks.
-            Backend roles are used when configured; otherwise you can choose a clearly
-            labelled local workspace role. No OTPs, wallets, or transactions are
-            simulated.
+            Connect your wallet to record crop batches, or explore existing
+            verified batches on the MST Testnet blockchain explorer.
           </p>
-          <Link to="/auth" className="mm-btn mm-btn--secondary">
-            Go to secure sign-in
-            <ArrowRight size={16} aria-hidden="true" />
-          </Link>
-        </div>
-      </section>
-
-      <section
-        id="sign-in"
-        className="mm-section mm-container"
-        aria-labelledby="sign-in-title"
-      >
-        <div className="mm-sign-in-section">
-          <div className="mm-sign-in-section__icon" aria-hidden="true">
-            <Wallet />
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
+            <Link to="/app" className="mm-btn mm-btn--primary">
+              Launch App Workspace <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to="/app/batches" className="mm-btn mm-btn--secondary">
+              Browse Batch Explorer
+            </Link>
           </div>
-          <h2 id="sign-in-title" className="mm-sign-in-section__title">
-            Phone-first access
-          </h2>
-          <p className="mm-sign-in-section__lead">
-            Authentication and wallet setup are separate. Confirm your phone with a
-            one-time SMS code, then complete onboarding: embedded wallet, verified MST
-            Testnet, and a backend-verified role when configured, or a clearly labelled
-            local workspace role otherwise. Your phone number is never written to the
-            blockchain.
-          </p>
-          <Link to="/auth" className="mm-btn mm-btn--primary mm-btn--full">
-            Continue with phone
-          </Link>
-          {!isPrivyConfigured() && (
-            <p className="mm-sign-in-section__setup">
-              Privy is not configured in this environment. Set{" "}
-              <code>VITE_PRIVY_APP_ID</code> and enable SMS to use real OTP sign-in.
-            </p>
-          )}
         </div>
       </section>
     </>

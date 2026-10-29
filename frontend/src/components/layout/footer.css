@@ -1,6 +1,6 @@
 .mm-footer {
   margin-top: auto;
-  padding-block: var(--space-10);
+  padding-block: var(--space-12);
   background: var(--color-primary);
   color: rgb(255 255 255 / 0.88);
 }

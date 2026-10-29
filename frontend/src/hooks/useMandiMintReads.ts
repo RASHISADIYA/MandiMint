@@ -1,6 +1,8 @@
 import { isAddress } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { isMandiMintReady } from "../config/blockchain";
+import { type NetworkId } from "../config/networks";
+import { useWeb3Wallet } from "../providers/Web3WalletContext";
 import {
   formatContractError,
   readBatchDetails,
@@ -22,14 +24,16 @@ export interface ContractReadState<T> {
   data: T | null;
   error: string | null;
   reload: () => void;
+  networkId: NetworkId;
 }
 
 function useReadState<T>(
   enabled: boolean,
+  networkId: NetworkId,
   loader: () => Promise<T>,
   dependencies: readonly unknown[],
 ): ContractReadState<T> {
-  const configured = isMandiMintReady();
+  const configured = isMandiMintReady(networkId);
   const [status, setStatus] = useState<ContractReadStatus>("idle");
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,54 +82,69 @@ function useReadState<T>(
     };
     // The loader is intentionally recreated from the caller's dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configured, enabled, reloadToken, ...dependencies]);
+  }, [configured, enabled, networkId, reloadToken, ...dependencies]);
 
-  return { status, data, error, reload };
+  return { status, data, error, reload, networkId };
 }
 
 export function useBatchDetails(
   batchId: bigint | null,
+  overrideNetworkId?: NetworkId,
 ): ContractReadState<MandiMintBatchDetails> {
+  const web3 = useWeb3Wallet();
+  const activeNetworkId = overrideNetworkId || web3.selectedNetwork;
+
   return useReadState(
     batchId !== null,
+    activeNetworkId,
     () => {
       if (batchId === null) {
         return Promise.reject(new Error("A batch ID is required."));
       }
-      return readBatchDetails(batchId);
+      return readBatchDetails(batchId, activeNetworkId);
     },
-    [batchId],
+    [batchId, activeNetworkId],
   );
 }
 
 export function useFarmerHistory(
   farmer: string | null,
+  overrideNetworkId?: NetworkId,
 ): ContractReadState<FarmerAllocationRow[]> {
+  const web3 = useWeb3Wallet();
+  const activeNetworkId = overrideNetworkId || web3.selectedNetwork;
   const validAddress = farmer !== null && isAddress(farmer);
+
   return useReadState(
     validAddress,
+    activeNetworkId,
     () => {
       if (!farmer) {
         return Promise.reject(new Error("A farmer wallet address is required."));
       }
-      return readFarmerAllocations(farmer);
+      return readFarmerAllocations(farmer, activeNetworkId);
     },
-    [farmer],
+    [farmer, activeNetworkId],
   );
 }
 
 export function useManagerStatus(
   address: string | null,
+  overrideNetworkId?: NetworkId,
 ): ContractReadState<boolean> {
+  const web3 = useWeb3Wallet();
+  const activeNetworkId = overrideNetworkId || web3.selectedNetwork;
   const validAddress = address !== null && isAddress(address);
+
   return useReadState(
     validAddress,
+    activeNetworkId,
     () => {
       if (!address) {
         return Promise.reject(new Error("A wallet address is required."));
       }
-      return readManagerStatus(address);
+      return readManagerStatus(address, activeNetworkId);
     },
-    [address],
+    [address, activeNetworkId],
   );
 }

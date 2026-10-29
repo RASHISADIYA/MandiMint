@@ -30,7 +30,7 @@
 }
 
 .mm-role-option:hover {
-  border-color: var(--color-forest-green);
+  border-color: var(--color-rich-green);
 }
 
 .mm-role-option:focus-within {
@@ -39,7 +39,7 @@
 
 .mm-role-option--selected {
   border-color: var(--color-primary);
-  background: var(--color-mint);
+  background: var(--color-sage-green);
 }
 
 .mm-role-option input {
@@ -57,13 +57,13 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius-md);
-  background: var(--color-mint);
+  background: var(--color-sage-green);
   color: var(--color-primary);
 }
 
 .mm-role-option--selected .mm-role-option__icon {
   background: var(--color-primary);
-  color: var(--color-mint);
+  color: var(--color-sage-green);
 }
 
 .mm-role-option__icon svg {

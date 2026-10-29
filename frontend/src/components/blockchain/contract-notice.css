@@ -3,10 +3,10 @@
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-4);
-  background: #fff8e6;
-  border: 1px solid #f1d48b;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
   border-radius: var(--radius-lg);
-  color: #6b4c00;
+  color: var(--color-warning);
 }
 
 .mm-contract-notice__icon {
@@ -46,7 +46,7 @@
 
 .mm-contract-notice code {
   font-size: 0.95em;
-  background: rgb(107 76 0 / 0.08);
+  background: var(--color-warning-bg);
   padding: 0.05em 0.3em;
   border-radius: var(--radius-sm);
 }

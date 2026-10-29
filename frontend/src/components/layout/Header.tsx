@@ -46,9 +46,6 @@ export function Header() {
                 {link.label}
               </button>
             ))}
-            <Link className="mm-nav__link" to="/auth">
-              Sign In
-            </Link>
           </nav>
         )}
         <div
@@ -95,16 +92,9 @@ export function Header() {
               {link.label}
             </button>
           ))}
-          <Link
-            className="mm-mobile-nav__link"
-            to="/auth"
-            onClick={closeMobile}
-          >
-            Sign In
-          </Link>
-          <div className="mm-mobile-nav__cta">
-            <Link to="/auth" className="mm-btn mm-btn--secondary mm-btn--full">
-              Get Started
+          <div className="mm-mobile-nav__cta" style={{ marginTop: "1rem" }}>
+            <Link to="/auth" onClick={closeMobile} className="mm-btn mm-btn--primary mm-btn--full">
+              Sign In / Connect Wallet
             </Link>
           </div>
         </nav>

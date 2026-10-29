@@ -8,6 +8,10 @@
   font-weight: var(--font-weight-medium);
   line-height: 1.4;
   border: 1px solid transparent;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .mm-badge svg {
@@ -39,4 +43,9 @@
 .mm-badge--neutral {
   background: var(--color-neutral-bg);
   color: var(--color-text-muted);
+}
+
+.mm-badge:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
 }

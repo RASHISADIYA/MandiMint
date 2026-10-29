@@ -16,6 +16,10 @@
     "authorize:local": "hardhat run scripts/authorize-local-manager.js --network localhost",
     "test:integration": "npm run compile && npm run test:integration --prefix frontend",
     "deploy:mst": "hardhat run scripts/deploy.js --network mstTestnet",
+    "preflight:mainnet": "hardhat run scripts/deploy-mainnet.js --network mstMainnet",
+    "deploy:mainnet": "hardhat run scripts/deploy-mainnet.js --network mstMainnet",
+    "record:sample": "hardhat run scripts/record-sample-batches.js --network mstTestnet",
+    "authorize:manager": "hardhat run scripts/authorize-manager.js --network mstTestnet",
     "dev": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
     "lint": "npm run lint --prefix frontend",
@@ -25,6 +29,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",
     "@nomicfoundation/hardhat-ethers": "^3.1.3",
     "chai": "4.5.0",
+    "dotenv": "^18.0.9",
     "ethers": "6.17.0",
     "hardhat": "^2.29.1"
   }

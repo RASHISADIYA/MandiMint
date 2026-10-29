@@ -1,29 +1,40 @@
 :root {
-  /* Brand palette */
-  --color-emerald: #073f32;
-  --color-forest-green: #0d6048;
-  --color-mint: #e7f5e9;
-  --color-warm-cream: #faf6ea;
-  --color-white: #ffffff;
-  --color-charcoal: #172720;
+  /* Brand palette - Agricultural Technology */
+  --color-deep-forest: #214E34;
+  --color-agricultural-green: #3F7650;
+  --color-soft-sage: #DCE8D8;
+  --color-warm-cream: #F7F6EF;
+  --color-clean-white: #FFFFFF;
+  --color-earth-brown: #8A6848;
+  --color-primary-text: #253329;
+  --color-secondary-text: #667368;
+  --color-borders: #DCE3D9;
+  --color-success: #287A4B;
+  --color-warning: #A56B16;
+  --color-error: #B42318;
+
+  /* Backward compatibility aliases */
+  --color-rich-green: var(--color-agricultural-green);
+  --color-sage-green: var(--color-soft-sage);
+  --color-warm-ivory: var(--color-warm-cream);
+  --color-white: var(--color-clean-white);
+  --color-charcoal: var(--color-primary-text);
+  --color-harvest-gold: var(--color-warning);
 
   /* Semantic tokens */
-  --color-primary: var(--color-emerald);
-  --color-primary-hover: var(--color-forest-green);
-  --color-accent: var(--color-mint);
+  --color-primary: var(--color-deep-forest);
+  --color-primary-hover: var(--color-agricultural-green);
+  --color-accent: var(--color-soft-sage);
   --color-background: var(--color-warm-cream);
-  --color-surface: var(--color-white);
-  --color-text: var(--color-charcoal);
-  --color-text-muted: #52645b;
-  --color-border: #dce7df;
-  --color-success: #0d6048;
-  --color-success-bg: #e7f5e9;
-  --color-warning: #8a5a00;
-  --color-warning-bg: #fff4d6;
-  --color-error: #a52828;
-  --color-error-bg: #fdecec;
-  --color-neutral-bg: #f1f5f2;
-  --color-neutral: #5d6f66;
+  --color-surface: var(--color-clean-white);
+  --color-text: var(--color-primary-text);
+  --color-text-muted: var(--color-secondary-text);
+  --color-border: var(--color-borders);
+  --color-success-bg: #EAF4EE;
+  --color-warning-bg: #FDF6EC;
+  --color-error-bg: #FDF2F2;
+  --color-neutral-bg: #F0F4EF;
+  --color-neutral: var(--color-secondary-text);
 
   /* Typography */
   --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

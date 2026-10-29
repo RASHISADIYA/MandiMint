@@ -158,9 +158,15 @@ beforeAll(async () => {
   };
   artifactAbi = artifact.abi;
 
-  const hardhatBin = resolve(repoRoot, "node_modules/.bin/hardhat");
+  const hardhatBin = resolve(
+    repoRoot,
+    process.platform === "win32"
+      ? "node_modules/.bin/hardhat.cmd"
+      : "node_modules/.bin/hardhat",
+  );
   hardhatNode = spawn(hardhatBin, ["node", "--port", String(port)], {
     cwd: repoRoot,
+    shell: process.platform === "win32",
     env: {
       ...process.env,
       HARDHAT_DISABLE_TELEMETRY_PROMPT: "true",

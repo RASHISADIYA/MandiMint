@@ -1,292 +1,369 @@
 import {
   CheckCircle2,
-  Circle,
-  LoaderCircle,
-  Network,
-  Shield,
+  Info,
+  Leaf,
+  Sprout,
   Wallet,
+  Warehouse,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { AccountMenu } from "../components/account/AccountMenu";
-import { RoleSelector } from "../components/auth/RoleSelector";
-import { ErrorBanner } from "../components/ui/ErrorBanner";
-import { StatusBadge } from "../components/ui/StatusBadge";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ROLE_LABELS } from "../auth/roles";
-import { isPrivyConfigured } from "../config/env";
-import { usePostLoginOnboarding } from "../hooks/usePostLoginOnboarding";
-import { formatPhoneNumber } from "../auth/phone";
+import { ConnectWalletButton } from "../components/wallet/ConnectWalletButton";
+import { useWeb3Wallet } from "../providers/Web3WalletContext";
+import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
+import { getRoleForWallet, type MandiMintRole } from "../auth/roles";
 import { truncateAddress } from "../lib/format";
 import "./onboarding.css";
 
-function StepIcon({ done, active }: { done: boolean; active: boolean }) {
-  if (done) {
-    return <CheckCircle2 className="mm-onboarding-step__icon mm-onboarding-step__icon--done" />;
-  }
-  if (active) {
-    return <LoaderCircle className="mm-onboarding-step__icon mm-onboarding-step__icon--active" />;
-  }
-  return <Circle className="mm-onboarding-step__icon" />;
-}
-
 export function OnboardingPage() {
   const navigate = useNavigate();
-  const onboarding = usePostLoginOnboarding();
-  const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "error">("idle");
+  const { connected, address, isCorrectNetwork, networkName, balance, isTestnet } =
+    useWeb3Wallet();
 
-  const {
-    ready,
-    authenticated,
-    phase,
-    isOnboardingComplete,
-    dashboardPath,
-    profile,
-    displayName,
-    walletAddress,
-    walletError,
-    networkError,
-    networkVerification,
-    role,
-    roleMessage,
-    roleStatus,
-    canSelectLocalRole,
-    selectLocalRole,
-    retryWalletCreation,
-    switchToMst,
-    verifyNetwork,
-    refreshRole,
-    mstChain,
-    mstConfigured,
-  } = onboarding;
+  const activeAddress = address ?? null;
+  const initialSavedRole = getRoleForWallet(activeAddress);
 
-  useEffect(() => {
-    if (isOnboardingComplete && dashboardPath) {
-      navigate(dashboardPath, { replace: true });
-    }
-  }, [isOnboardingComplete, dashboardPath, navigate]);
+  // State: initially null for first-time user unless previously saved
+  const [selectedRole, setSelectedRole] = useState<MandiMintRole | null>(
+    () => initialSavedRole,
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCopyAddress = useCallback(async () => {
-    if (!walletAddress) {
-      return;
-    }
+  const { selectLocalRole } = useAuthoritativeRole(connected);
+
+  const handleContinue = useCallback(() => {
+    if (!selectedRole || !activeAddress) return;
+
+    setIsSubmitting(true);
     try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopyStatus("ok");
-    } catch {
-      setCopyStatus("error");
+      // Save role bound to this wallet
+      selectLocalRole(selectedRole);
+
+      // Route to role-specific dashboard
+      const target =
+        selectedRole === "farmer" ? "/app/farmer" : "/app/manager";
+      navigate(target, { replace: true });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [walletAddress]);
+  }, [selectedRole, activeAddress, selectLocalRole, navigate]);
 
-  if (!isPrivyConfigured()) {
-    return <Navigate to="/auth" replace />;
+  // If not connected, show connection prompt
+  if (!connected || !activeAddress) {
+    return (
+      <section className="mm-onboarding mm-container" aria-labelledby="onboarding-title">
+        <div
+          style={{
+            maxWidth: "520px",
+            margin: "3rem auto",
+            padding: "2.5rem 2rem",
+            background: "var(--color-surface)",
+            borderRadius: "var(--radius-lg)",
+            border: "1px solid var(--color-borders)",
+            boxShadow: "var(--shadow-sm)",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              margin: "0 auto 1.25rem auto",
+              background: "var(--color-soft-sage)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--color-deep-forest)",
+            }}
+          >
+            <Wallet size={24} />
+          </div>
+
+          <h1 id="onboarding-title" style={{ fontSize: "1.5rem", marginBottom: "0.5rem", color: "var(--color-primary-text)" }}>
+            Connect Your Wallet
+          </h1>
+          <p style={{ color: "var(--color-secondary-text)", fontSize: "0.9rem", marginBottom: "1.75rem", lineHeight: 1.5 }}>
+            To select your role and access the MandiMint agricultural workspace,
+            please connect your Web3 wallet.
+          </p>
+
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <ConnectWalletButton variant="primary" />
+          </div>
+        </div>
+      </section>
+    );
   }
-
-  if (ready && !authenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  const authDone = authenticated;
-  const walletDone =
-    phase === "network_pending" ||
-    phase === "network_blocked" ||
-    phase === "role_verifying" ||
-    phase === "role_unassigned" ||
-    phase === "role_error" ||
-    phase === "role_unconfigured" ||
-    phase === "complete";
-  const networkDone = networkVerification.status === "connected";
-  const roleDone = roleStatus === "verified";
-  const needsLocalRole = canSelectLocalRole && !roleDone;
 
   return (
     <section className="mm-onboarding mm-container" aria-labelledby="onboarding-title">
-      <header className="mm-onboarding__header">
-        <div>
-          <p className="mm-onboarding__eyebrow">
-            <Shield size={14} aria-hidden="true" />
-            Secure setup
-          </p>
-          <h1 id="onboarding-title" className="mm-onboarding__title">
-            Set up your MandiMint account
+      <div
+        style={{
+          maxWidth: "680px",
+          margin: "2rem auto",
+          background: "var(--color-surface)",
+          borderRadius: "var(--radius-xl)",
+          border: "1px solid var(--color-borders)",
+          boxShadow: "var(--shadow-md)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header Banner */}
+        <div
+          style={{
+            padding: "2rem 2.25rem 1.75rem 2.25rem",
+            background: "linear-gradient(135deg, var(--color-warm-cream) 0%, #edf4ee 100%)",
+            borderBottom: "1px solid var(--color-borders)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "var(--color-agricultural-green)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.3rem",
+              }}
+            >
+              <Leaf size={14} /> Step 2: Role Selection
+            </span>
+
+            {/* Connected Wallet Badge */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.3rem 0.65rem",
+                background: "var(--color-clean-white)",
+                border: "1px solid var(--color-borders)",
+                borderRadius: "9999px",
+                fontSize: "0.775rem",
+                fontFamily: "monospace",
+                color: "var(--color-primary-text)",
+              }}
+            >
+              <span className="mm-status-dot mm-status-dot--green" />
+              <span>{truncateAddress(activeAddress, 6, 4)}</span>
+            </div>
+          </div>
+
+          <h1
+            id="onboarding-title"
+            style={{
+              fontSize: "1.75rem",
+              color: "var(--color-primary-text)",
+              marginBottom: "0.5rem",
+              fontWeight: 700,
+            }}
+          >
+            Select Your Workspace Role
           </h1>
-          <p className="mm-onboarding__lead">
-            We restore your embedded wallet, verify MST Testnet, then load your
-            role. A configured backend is always authoritative; without one, you can
-            choose a clearly labelled local workspace role. Dashboard access requires
-            all steps—sign-in alone is not enough.
+          <p style={{ color: "var(--color-secondary-text)", fontSize: "0.925rem", margin: 0, lineHeight: 1.5 }}>
+            Choose how you will participate in the agricultural supply chain.
+            Your role customizes your dashboard, permissions, and available blockchain operations.
           </p>
         </div>
-        {authenticated && <AccountMenu compact />}
-      </header>
 
-      <ol className="mm-onboarding-steps" aria-label="Setup progress">
-        <li className="mm-onboarding-step">
-          <StepIcon done={authDone} active={phase === "session_restoring"} />
-          <div>
-            <h2 className="mm-onboarding-step__title">Authentication</h2>
-            <p className="mm-onboarding-step__text">
-              {profile?.phone
-                ? `Signed in as ${formatPhoneNumber(profile.phone)}`
-                : profile?.email
-                  ? `Signed in as ${profile.email}`
-                  : "Restoring secure session…"}
-            </p>
-          </div>
-        </li>
-        <li className="mm-onboarding-step">
-          <StepIcon
-            done={walletDone && Boolean(walletAddress)}
-            active={phase === "wallet_pending" || phase === "wallet_creating"}
-          />
-          <div>
-            <h2 className="mm-onboarding-step__title">Embedded wallet</h2>
-            {phase === "wallet_pending" && !walletAddress && (
-              <p className="mm-onboarding-step__text">
-                Checking for an existing Privy wallet tied to your account. A new
-                wallet is created only if the provider confirms one is required.
-              </p>
-            )}
-            {phase === "wallet_creating" && (
-              <StatusBadge variant="pending">Creating embedded wallet…</StatusBadge>
-            )}
-            {walletAddress && (
-              <p className="mm-onboarding-step__text">
-                Wallet{" "}
-                <code>{truncateAddress(walletAddress, 6, 4)}</code>
-                <Button type="button" variant="ghost" onClick={() => void handleCopyAddress()}>
-                  Copy address
-                </Button>
-              </p>
-            )}
-            {copyStatus === "ok" && (
-              <p className="mm-onboarding-step__text" role="status" aria-live="polite">
-                Address copied to clipboard.
-              </p>
-            )}
-            {copyStatus === "error" && (
-              <p className="mm-onboarding-step__text" role="alert">
-                Could not copy the address. Select and copy manually.
-              </p>
-            )}
-            {phase === "wallet_failed" && (
-              <ErrorBanner
-                message={walletError ?? "Wallet setup failed."}
-                onRetry={() => void retryWalletCreation()}
-              />
-            )}
-          </div>
-        </li>
-        <li className="mm-onboarding-step">
-          <StepIcon
-            done={networkDone}
-            active={phase === "network_pending" || phase === "network_blocked"}
-          />
-          <div>
-            <h2 className="mm-onboarding-step__title">MST Testnet</h2>
-            {!mstConfigured && (
-              <ErrorBanner message="MST Testnet env vars are missing. Configure VITE_MST_TESTNET_CHAIN_ID and VITE_MST_TESTNET_RPC_URL with official values." />
-            )}
-            {mstConfigured && mstChain && (
-              <p className="mm-onboarding-step__text">
-                Expected chain ID {mstChain.id}. Status:{" "}
-                {networkVerification.status === "connected"
-                  ? "verified on wallet"
-                  : networkVerification.status}
-              </p>
-            )}
-            {networkVerification.status === "connected" && (
-              <StatusBadge variant="success">
-                <Network size={14} aria-hidden="true" />
-                MST Testnet connected (verified)
-              </StatusBadge>
-            )}
-            {phase === "network_blocked" && (
-              <ErrorBanner
-                message={
-                  networkError ??
-                  networkVerification.message ??
-                  "Network verification failed."
+        {/* Role Cards Grid */}
+        <div style={{ padding: "2rem 2.25rem" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "1.25rem",
+              marginBottom: "1.75rem",
+            }}
+          >
+            {/* Role 1: Farmer */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedRole("farmer")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedRole("farmer");
                 }
-                onRetry={() => {
-                  void switchToMst();
-                  void verifyNetwork();
-                }}
-              />
-            )}
-          </div>
-        </li>
-        <li className="mm-onboarding-step">
-          <StepIcon
-            done={roleDone}
-            active={phase === "role_verifying" || needsLocalRole}
-          />
-          <div>
-            <h2 className="mm-onboarding-step__title">Workspace role</h2>
-            {canSelectLocalRole && (
-              <p className="mm-onboarding-step__text">
-                No role backend is configured. Choose the workspace you need. This
-                selection is stored on this device and is <strong>not</strong>{" "}
-                server-verified; FPO batch writes still require on-chain manager
-                authorization.
-              </p>
-            )}
-            {canSelectLocalRole && (
-              <RoleSelector
-                value={role ?? "farmer"}
-                onChange={selectLocalRole}
-                legend="Choose local workspace role"
-              />
-            )}
-            {canSelectLocalRole && role && (
-              <StatusBadge variant="warning">
-                {ROLE_LABELS[role]} · local only, not server-verified
-              </StatusBadge>
-            )}
-            {phase === "role_verifying" && (
-              <StatusBadge variant="pending">Verifying role with backend…</StatusBadge>
-            )}
-            {phase === "role_unconfigured" && !canSelectLocalRole && (
-              <ErrorBanner message={roleMessage ?? "Role API not configured."} />
-            )}
-            {phase === "role_unassigned" && !canSelectLocalRole && (
-              <>
-                <ErrorBanner
-                  message={
-                    roleMessage ??
-                    "No role assigned. Access to farmer or FPO manager dashboards is blocked."
-                  }
-                  onRetry={() => void refreshRole()}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/app/access-pending")}
+              }}
+              style={{
+                padding: "1.5rem",
+                borderRadius: "var(--radius-lg)",
+                border:
+                  selectedRole === "farmer"
+                    ? "2px solid var(--color-agricultural-green)"
+                    : "1px solid var(--color-borders)",
+                background:
+                  selectedRole === "farmer"
+                    ? "var(--color-success-bg)"
+                    : "var(--color-clean-white)",
+                cursor: "pointer",
+                transition: "all var(--transition-fast)",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--color-soft-sage)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-deep-forest)",
+                  }}
                 >
-                  Open access pending page
-                </Button>
-              </>
-            )}
-            {phase === "role_error" && (
-              <ErrorBanner
-                message={roleMessage ?? "Could not verify your role."}
-                onRetry={() => void refreshRole()}
-              />
-            )}
-            {roleDone && displayName && (
-              <p className="mm-onboarding-step__text">Welcome, {displayName}.</p>
-            )}
-          </div>
-        </li>
-      </ol>
+                  <Sprout size={24} />
+                </div>
+                {selectedRole === "farmer" && (
+                  <CheckCircle2 size={20} style={{ color: "var(--color-success)" }} />
+                )}
+              </div>
 
-      <aside className="mm-onboarding-aside" aria-label="Wallet notes">
-        <Wallet aria-hidden="true" />
-        <p>
-          Wallet keys stay with Privy. MandiMint never stores private keys or sends
-          transactions during onboarding.
-        </p>
-      </aside>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary-text)" }}>
+                Farmer
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "var(--color-secondary-text)", lineHeight: 1.5, margin: 0 }}>
+                Review your verified on-chain crop deliveries, track commodity allocations,
+                and inspect transparent mandi market receipts linked to your wallet.
+              </p>
+            </div>
+
+            {/* Role 2: FPO Manager */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedRole("fpo_admin")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedRole("fpo_admin");
+                }
+              }}
+              style={{
+                padding: "1.5rem",
+                borderRadius: "var(--radius-lg)",
+                border:
+                  selectedRole === "fpo_admin"
+                    ? "2px solid var(--color-agricultural-green)"
+                    : "1px solid var(--color-borders)",
+                background:
+                  selectedRole === "fpo_admin"
+                    ? "var(--color-success-bg)"
+                    : "var(--color-clean-white)",
+                cursor: "pointer",
+                transition: "all var(--transition-fast)",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--color-soft-sage)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-deep-forest)",
+                  }}
+                >
+                  <Warehouse size={24} />
+                </div>
+                {selectedRole === "fpo_admin" && (
+                  <CheckCircle2 size={20} style={{ color: "var(--color-success)" }} />
+                )}
+              </div>
+
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary-text)" }}>
+                FPO Manager
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "var(--color-secondary-text)", lineHeight: 1.5, margin: 0 }}>
+                Manage authorized agricultural operations, review relevant batches and allocations,
+                and perform the management actions permitted by the system.
+              </p>
+            </div>
+          </div>
+
+          {/* Role Explanation & Honest Permission Notice */}
+          {selectedRole === "fpo_admin" && (
+            <div
+              style={{
+                padding: "0.85rem 1rem",
+                background: "var(--color-warning-bg)",
+                border: "1px solid var(--color-warning)",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.825rem",
+                color: "var(--color-primary-text)",
+                marginBottom: "1.75rem",
+                display: "flex",
+                gap: "0.6rem",
+                alignItems: "flex-start",
+              }}
+            >
+              <Info size={16} style={{ color: "var(--color-warning)", flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <strong>Contract Authorization Notice:</strong> Selecting FPO Manager grants access
+                to the management dashboard. Recording on-chain batches requires your wallet to be
+                authorized by the contract owner via <code>setManager</code> on the MandiMint smart contract.
+              </div>
+            </div>
+          )}
+
+          {/* Primary Action Button: Continue */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontSize: "0.85rem", color: "var(--color-secondary-text)", margin: 0 }}>
+              {selectedRole
+                ? `Ready to enter the ${selectedRole === "farmer" ? "Farmer" : "FPO Manager"} workspace.`
+                : "Please select a role above to proceed."}
+            </p>
+
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleContinue}
+              disabled={!selectedRole || isSubmitting}
+              style={{ padding: "0.75rem 1.75rem", fontSize: "0.95rem" }}
+            >
+              Continue →
+            </Button>
+          </div>
+        </div>
+
+        {/* Footer Info */}
+        <div
+          style={{
+            padding: "1rem 2.25rem",
+            background: "var(--color-background)",
+            borderTop: "1px solid var(--color-borders)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.8rem",
+            color: "var(--color-secondary-text)",
+          }}
+        >
+          <span>
+            Network: {networkName || (isCorrectNetwork ? "MST Testnet (91562037)" : "Wrong Network")}
+          </span>
+          {balance !== null && (
+            <span>Balance: {balance} {isTestnet ? "tMSTC" : "MSTC"}</span>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

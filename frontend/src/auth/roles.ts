@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MandiMintRole, RoleOption } from "./types";
+export type { MandiMintRole, RoleOption } from "./types";
 
 /**
  * Local role preferences are a fallback only when no role API is configured.
@@ -14,26 +15,36 @@ export const ROLE_OPTIONS: readonly RoleOption[] = [
   {
     value: "farmer",
     label: "Farmer",
-    description: "View your recorded crop sale allocations and batch history.",
+    description:
+      "Record agricultural produce batches, manage produce information, and review the farmer's relevant traceability records.",
   },
   {
     value: "fpo_admin",
-    label: "FPO Admin",
-    description: "Record batches if your connected wallet is authorized on-chain.",
+    label: "FPO Manager",
+    description:
+      "Manage authorized agricultural operations, review relevant batches and allocations, and perform the management actions permitted by the system.",
   },
 ] as const;
 
 export const ROLE_LABELS: Record<MandiMintRole, string> = {
   farmer: "Farmer",
-  fpo_admin: "FPO Admin",
+  fpo_admin: "FPO Manager",
 };
 
 export function isMandiMintRole(value: unknown): value is MandiMintRole {
   return value === "farmer" || value === "fpo_admin";
 }
 
-function roleKey(userId: string): string {
-  return `${ROLE_PREFIX}${userId}`;
+function roleKey(id: string): string {
+  return `${ROLE_PREFIX}${id.toLowerCase().trim()}`;
+}
+
+export function getRoleForWallet(walletAddress: string | null): MandiMintRole | null {
+  return getRoleForUser(walletAddress);
+}
+
+export function setRoleForWallet(walletAddress: string, role: MandiMintRole): void {
+  setRoleForUser(walletAddress, role);
 }
 
 export function getRoleForUser(userId: string | null): MandiMintRole | null {
@@ -121,6 +132,9 @@ export function useStoredRole(userId: string | null) {
         return;
       }
       setRoleForUser(userId, nextRole);
+      // Keep React state in sync even if the storage change event is missed or
+      // delayed by the browser.
+      setRoleState(nextRole);
     },
     [userId],
   );

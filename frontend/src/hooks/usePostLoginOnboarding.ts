@@ -16,6 +16,18 @@ export type OnboardingPhase =
   | "role_unconfigured"
   | "complete";
 
+export const TRANSIENT_ONBOARDING_PHASES = new Set<OnboardingPhase>([
+  "session_restoring",
+  "wallet_pending",
+  "wallet_creating",
+  "network_pending",
+  "role_verifying",
+]);
+
+export function isTransientOnboardingPhase(phase: OnboardingPhase): boolean {
+  return TRANSIENT_ONBOARDING_PHASES.has(phase);
+}
+
 export function usePostLoginOnboarding() {
   const wallet = useWalletOnboarding();
   const roleFetchEnabled =

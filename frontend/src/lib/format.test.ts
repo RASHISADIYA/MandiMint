@@ -23,15 +23,59 @@ describe("parseWholeNumber", () => {
 });
 
 describe("parseAddress", () => {
-  it("returns a checksummed address", () => {
-    expect(
-      parseAddress("0x0000000000000000000000000000000000000001"),
-    ).toBe("0x0000000000000000000000000000000000000001");
+  const EXPECTED_CHECKSUM = "0x2AF9B345778954379E65b726aeA26a0E0a2Df239";
+
+  it("accepts a valid lowercase address and returns EIP-55 checksum", () => {
+    expect(parseAddress("0x2af9b345778954379e65b726aea26a0e0a2df239")).toBe(
+      EXPECTED_CHECKSUM,
+    );
   });
 
-  it("rejects malformed addresses", () => {
+  it("accepts a valid uppercase hexadecimal address", () => {
+    expect(parseAddress("0x2AF9B345778954379E65B726AEA26A0E0A2DF239")).toBe(
+      EXPECTED_CHECKSUM,
+    );
+  });
+
+  it("accepts an already valid checksummed address", () => {
+    expect(parseAddress("0x2AF9B345778954379E65b726aeA26a0E0a2Df239")).toBe(
+      EXPECTED_CHECKSUM,
+    );
+  });
+
+  it("accepts an address supplied in arbitrary mixed case without throwing bad checksum errors", () => {
+    // Has "dF" instead of valid EIP-55 "Df"
+    expect(parseAddress("0x2AF9B345778954379E65b726aeA26a0E0a2dF239")).toBe(
+      EXPECTED_CHECKSUM,
+    );
+  });
+
+  it("trims leading and trailing whitespace", () => {
+    expect(
+      parseAddress("  \t 0x2af9b345778954379e65b726aea26a0e0a2df239 \n "),
+    ).toBe(EXPECTED_CHECKSUM);
+  });
+
+  it("rejects addresses with invalid lengths", () => {
     expect(parseAddress("0x123")).toBeNull();
+    expect(parseAddress("0x2af9b345778954379e65b726aea26a0e0a2df23")).toBeNull(); // 39 hex
+    expect(parseAddress("0x2af9b345778954379e65b726aea26a0e0a2df2399")).toBeNull(); // 41 hex
+  });
+
+  it("rejects non-hexadecimal characters and malformed input", () => {
+    expect(parseAddress("0x2af9b345778954379e65b726aea26a0e0a2df23z")).toBeNull();
     expect(parseAddress("not-an-address")).toBeNull();
+    expect(parseAddress("")).toBeNull();
+    expect(parseAddress("0x")).toBeNull();
+  });
+
+  it("handles the zero address correctly", () => {
+    expect(parseAddress("0x0000000000000000000000000000000000000000")).toBe(
+      "0x0000000000000000000000000000000000000000",
+    );
+    expect(parseAddress(" 0x0000000000000000000000000000000000000000 ")).toBe(
+      "0x0000000000000000000000000000000000000000",
+    );
   });
 });
 

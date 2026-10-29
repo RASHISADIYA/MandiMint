@@ -1,6 +1,7 @@
+import type { ConnectedWallet } from "@privy-io/react-auth";
 import { useCreateWallet, usePrivy, useWallets } from "@privy-io/react-auth";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getMstTestnetEnvConfig, isMstTestnetConfigured } from "../config/env";
+import { getMstTestnetEnvConfig } from "../config/env";
 import { resolveMstTestnetChain } from "../config/mstTestnetChain";
 import type { AuthUserProfile, WalletOnboardingState } from "../auth/types";
 import {
@@ -54,18 +55,26 @@ export function useWalletOnboarding() {
   const [networkVerification, setNetworkVerification] =
     useState<NetworkVerificationState>(idleState());
   const switchAttemptRef = useRef(0);
+  const lastResetKeyRef = useRef<string | null>(null);
   const verifyRequestRef = useRef(0);
   const walletCreateAttemptRef = useRef(false);
 
-  const embeddedWallet = useMemo(
-    () => wallets.find((wallet) => wallet.walletClientType === "privy"),
-    [wallets],
-  );
+  const embeddedWalletRef = useRef<ConnectedWallet | null>(null);
+  const embeddedWallet = useMemo(() => {
+    const found =
+      wallets.find((wallet) => wallet.walletClientType === "privy") ?? null;
+    if (found && embeddedWalletRef.current?.address === found.address) {
+      // Preserve object identity for the same wallet across Privy re-renders.
+      return embeddedWalletRef.current;
+    }
+    embeddedWalletRef.current = found;
+    return found;
+  }, [wallets]);
 
   const profile = useMemo(() => extractUserProfile(user), [user]);
+  const mstEnv = useMemo(() => getMstTestnetEnvConfig(), []);
+  const mstConfigured = mstEnv !== null;
   const mstChain = useMemo(() => resolveMstTestnetChain(), []);
-  const mstConfigured = isMstTestnetConfigured();
-  const mstEnv = getMstTestnetEnvConfig();
 
   const runNetworkVerification = useCallback(async () => {
     if (!embeddedWallet || !mstEnv) {
@@ -130,11 +139,17 @@ export function useWalletOnboarding() {
   }, [embeddedWallet, mstChain, mstEnv, runNetworkVerification]);
 
   useEffect(() => {
+    const resetKey = `${authenticated}:${embeddedWallet?.address ?? "none"}:${walletsReady}`;
     if (!authenticated || !embeddedWallet || !walletsReady) {
-      setNetworkVerification(idleState());
-      switchAttemptRef.current = 0;
+      if (lastResetKeyRef.current !== resetKey) {
+        setNetworkVerification(idleState());
+        switchAttemptRef.current = 0;
+        lastResetKeyRef.current = resetKey;
+      }
       return;
     }
+
+    lastResetKeyRef.current = resetKey;
 
     if (!mstConfigured) {
       setNetworkVerification(unconfiguredNetworkState());

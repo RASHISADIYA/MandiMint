@@ -1,9 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
-import { RequireAuth } from "./components/workspace/RequireAuth";
-import { RequireOnboarding } from "./components/workspace/RequireOnboarding";
-import { RoleRoute } from "./components/workspace/RoleRoute";
 import { WorkspaceLayout } from "./components/workspace/WorkspaceLayout";
+import { RequireRole } from "./components/workspace/RequireRole";
 import { AuthPage } from "./pages/AuthPage";
 import { LandingPage } from "./pages/LandingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
@@ -13,8 +11,38 @@ import { BatchLookupPage } from "./pages/workspace/BatchLookupPage";
 import { FarmerDashboardPage } from "./pages/workspace/FarmerDashboardPage";
 import { FarmerHistoryPage } from "./pages/workspace/FarmerHistoryPage";
 import { ManagerDashboardPage } from "./pages/workspace/ManagerDashboardPage";
+import { ManagerAuthorizationPage } from "./pages/workspace/ManagerAuthorizationPage";
 import { RecordBatchPage } from "./pages/workspace/RecordBatchPage";
-import { DashboardHomeRedirect } from "./components/workspace/DashboardHomeRedirect";
+import { useWeb3Wallet } from "./providers/Web3WalletContext";
+import { useAuthoritativeRole } from "./hooks/useAuthoritativeRole";
+import { getRoleForWallet } from "./auth/roles";
+
+function AppIndexRedirect() {
+  const { connected, address, isConnecting } = useWeb3Wallet();
+  const { role } = useAuthoritativeRole(connected);
+
+  if (isConnecting) {
+    return (
+      <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
+        <p style={{ color: "var(--color-secondary-text)" }}>Connecting wallet…</p>
+      </div>
+    );
+  }
+
+  if (!connected || !address) {
+    return <Navigate to="/" replace />;
+  }
+
+  const effectiveRole = role || getRoleForWallet(address);
+  if (effectiveRole === "farmer") {
+    return <Navigate to="/app/farmer" replace />;
+  }
+  if (effectiveRole === "fpo_admin") {
+    return <Navigate to="/app/manager" replace />;
+  }
+
+  return <Navigate to="/onboarding" replace />;
+}
 
 export default function App() {
   return (
@@ -23,34 +51,32 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
 
-          <Route element={<RequireAuth />}>
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route path="/app/access-pending" element={<AccessPendingPage />} />
+          {/* Unified Web3 & MandiMint Workspace */}
+          <Route path="/app" element={<WorkspaceLayout area="shared" />}>
+            <Route index element={<AppIndexRedirect />} />
+            <Route path="access-pending" element={<AccessPendingPage />} />
 
-            <Route element={<RequireOnboarding />}>
-              <Route path="/app" element={<DashboardHomeRedirect />} />
+            {/* Batch Explorer (Public on-chain reads) */}
+            <Route path="batches" element={<BatchLookupPage />} />
+            <Route path="batches/:batchId" element={<BatchDetailsPage />} />
 
-              <Route element={<RoleRoute allowedRoles={["farmer"]} />}>
-                <Route path="/app/farmer" element={<WorkspaceLayout area="farmer" />}>
-                  <Route index element={<FarmerDashboardPage />} />
-                  <Route path="history" element={<FarmerHistoryPage />} />
-                </Route>
-              </Route>
+            {/* Farmer Area (Requires 'farmer' role) */}
+            <Route element={<RequireRole allowedRole="farmer" />}>
+              <Route path="farmer" element={<FarmerDashboardPage />} />
+              <Route path="farmer/history" element={<FarmerHistoryPage />} />
+            </Route>
 
-              <Route element={<RoleRoute allowedRoles={["fpo_admin"]} />}>
-                <Route path="/app/manager" element={<WorkspaceLayout area="manager" />}>
-                  <Route index element={<ManagerDashboardPage />} />
-                  <Route path="record" element={<RecordBatchPage />} />
-                </Route>
-              </Route>
+            {/* Manager Area (Requires 'fpo_admin' role) */}
+            <Route element={<RequireRole allowedRole="fpo_admin" />}>
+              <Route path="manager" element={<ManagerDashboardPage />} />
+              <Route path="manager/authorize" element={<ManagerAuthorizationPage />} />
+            </Route>
 
-              <Route element={<RoleRoute allowedRoles={["farmer", "fpo_admin"]} />}>
-                <Route path="/app/batches" element={<WorkspaceLayout area="shared" />}>
-                  <Route index element={<BatchLookupPage />} />
-                  <Route path=":batchId" element={<BatchDetailsPage />} />
-                </Route>
-              </Route>
+            {/* Privileged Batch Recording (Requires 'fpo_admin' role AND on-chain manager authorization) */}
+            <Route element={<RequireRole allowedRole="fpo_admin" requireOnChainManager />}>
+              <Route path="manager/record" element={<RecordBatchPage />} />
             </Route>
           </Route>
 

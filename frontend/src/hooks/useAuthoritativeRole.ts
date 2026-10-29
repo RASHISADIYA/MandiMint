@@ -1,6 +1,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStoredRole } from "../auth/roles";
+import { useWeb3Wallet } from "../providers/Web3WalletContext";
 import type { AuthoritativeRoleState } from "../services/role/types";
 import {
   fetchAuthoritativeUserProfile,
@@ -16,20 +17,24 @@ const INITIAL: AuthoritativeRoleState = {
 
 export function useAuthoritativeRole(enabled: boolean) {
   const { getAccessToken, authenticated, user } = usePrivy();
+  const { connected, address } = useWeb3Wallet();
+  const effectiveAuth = authenticated || connected;
+  const effectiveUserId = user?.id ?? (address ? address.toLowerCase() : null);
+
   const backendConfigured = isRoleApiConfigured();
-  const [localRole, selectLocalRole] = useStoredRole(user?.id ?? null);
+  const [localRole, selectLocalRole] = useStoredRole(effectiveUserId);
   const [state, setState] = useState<AuthoritativeRoleState>(INITIAL);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
   const refresh = useCallback(async () => {
-    if (!enabled || !authenticated) {
+    if (!enabled || !effectiveAuth || !effectiveUserId) {
       setState(INITIAL);
       setDisplayName(null);
       return;
     }
 
-    if (!backendConfigured) {
+    if (!backendConfigured || !authenticated) {
       requestIdRef.current += 1;
       setDisplayName(null);
       setState(
@@ -38,14 +43,14 @@ export function useAuthoritativeRole(enabled: boolean) {
               status: "verified",
               role: localRole,
               message:
-                "Local role selected. This workspace preference is not verified by a backend; FPO batch writes still require on-chain manager authorization.",
+                "Role preference bound to connected wallet. Privileged FPO manager actions are verified directly on-chain.",
               source: "local",
             }
           : {
               status: "unassigned",
               role: null,
               message:
-                "No role backend is configured. Choose a local Farmer or FPO Admin workspace. This choice is not server-verified, and FPO batch writes still require on-chain manager authorization.",
+                "Please choose your role for this wallet. FPO batch writes require on-chain manager authorization.",
               source: "local",
             },
       );
@@ -82,17 +87,17 @@ export function useAuthoritativeRole(enabled: boolean) {
       source: result.source,
     });
     setDisplayName(result.displayName);
-  }, [authenticated, backendConfigured, enabled, getAccessToken, localRole]);
+  }, [authenticated, effectiveAuth, effectiveUserId, backendConfigured, enabled, getAccessToken, localRole]);
 
   useEffect(() => {
-    if (!enabled || !authenticated) {
+    if (!enabled || !effectiveAuth || !effectiveUserId) {
       setState(INITIAL);
       setDisplayName(null);
       return;
     }
 
     void refresh();
-  }, [enabled, authenticated, refresh]);
+  }, [enabled, effectiveAuth, effectiveUserId, localRole, refresh]);
 
   const reset = useCallback(() => {
     requestIdRef.current += 1;
@@ -103,7 +108,7 @@ export function useAuthoritativeRole(enabled: boolean) {
   return {
     ...state,
     displayName,
-    canSelectLocalRole: !backendConfigured,
+    canSelectLocalRole: !backendConfigured || !authenticated,
     selectLocalRole,
     refresh,
     reset,

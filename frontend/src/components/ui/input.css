@@ -1,11 +1,11 @@
 .mm-field {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .mm-input {
   display: block;
   width: 100%;
-  min-height: 2.75rem;
+  min-height: 3rem;
   padding: var(--space-2) var(--space-3);
   font-family: inherit;
   font-size: var(--font-size-base);
@@ -15,16 +15,17 @@
   border-radius: var(--radius-md);
   transition:
     border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .mm-input:hover:not(:disabled) {
-  border-color: #d1d5db;
+  border-color: var(--color-deep-forest);
 }
 
 .mm-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-deep-forest);
   box-shadow: var(--focus-ring);
 }
 
@@ -38,6 +39,11 @@
   border-color: var(--color-error);
 }
 
+.mm-input--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgb(165 40 40 / 0.15);
+}
+
 .mm-field__error {
   display: flex;
   align-items: flex-start;
@@ -45,6 +51,7 @@
   margin-top: var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-error);
+  line-height: var(--line-height-relaxed);
 }
 
 .visually-hidden {

@@ -82,17 +82,17 @@ p {
 }
 
 .mm-section {
-  padding-block: var(--space-16);
+  padding-block: var(--space-20);
 }
 
 .mm-section-header {
   max-width: 40rem;
-  margin-bottom: var(--space-10);
+  margin-bottom: var(--space-12);
 }
 
 .mm-section-title {
   font-size: var(--font-size-2xl);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 @media (min-width: 768px) {

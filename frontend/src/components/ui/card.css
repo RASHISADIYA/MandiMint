@@ -5,6 +5,14 @@
   box-shadow: var(--shadow-sm);
   padding: var(--space-6);
   height: 100%;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.mm-card:hover {
+  border-color: var(--color-deep-forest);
+  box-shadow: var(--shadow-md);
 }
 
 .mm-card__header {
@@ -15,6 +23,7 @@
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin-bottom: var(--space-2);
+  color: var(--color-charcoal);
 }
 
 .mm-card__description {
@@ -43,8 +52,8 @@
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md);
-  background: var(--color-mint);
-  color: var(--color-primary);
+  background: var(--color-sage-green);
+  color: var(--color-deep-forest);
   margin-bottom: var(--space-4);
 }
 

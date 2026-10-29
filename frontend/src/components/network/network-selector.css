@@ -1,0 +1,232 @@
+.mm-net-selector {
+  position: relative;
+  display: inline-flex;
+}
+
+.mm-net-selector__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-md, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--color-border, #d1d5db);
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1f2937);
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.mm-net-selector__btn:hover {
+  background: var(--color-surface-hover, #f9fafb);
+  border-color: var(--color-border-hover, #9ca3af);
+}
+
+.mm-net-selector__btn--mainnet {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.mm-net-selector__btn--mainnet:hover {
+  background: #fef3c7;
+}
+
+.mm-net-selector__btn--mismatch {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.mm-net-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mm-net-dot--testnet {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.mm-net-dot--mainnet {
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+
+.mm-net-dot--mismatch {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+  animation: mm-pulse 1.8s infinite ease-in-out;
+}
+
+.mm-net-dot--offline {
+  background: #9ca3af;
+}
+
+@keyframes mm-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+}
+
+.mm-net-selector__name {
+  font-weight: 600;
+}
+
+.mm-net-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.mm-net-badge--testnet {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.mm-net-badge--mainnet {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.mm-net-mismatch-icon {
+  color: #dc2626;
+  margin-left: -0.15rem;
+}
+
+.mm-net-chevron {
+  color: var(--color-text-muted, #6b7280);
+  transition: transform 0.2s ease;
+}
+
+.mm-net-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.mm-net-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-lg, 10px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  overflow: hidden;
+  animation: mm-dropdown-in 0.15s ease-out;
+}
+
+@keyframes mm-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mm-net-dropdown__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.mm-net-dropdown__options {
+  padding: 0.35rem;
+}
+
+.mm-net-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.65rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.mm-net-option:hover {
+  background: #f3f4f6;
+}
+
+.mm-net-option--active {
+  background: #f0fdf4;
+}
+
+.mm-net-option__left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.mm-net-option__left .mm-net-dot {
+  margin-top: 0.3rem;
+}
+
+.mm-net-option__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1.2;
+}
+
+.mm-net-option__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.mm-net-option__sub {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+  line-height: 1.25;
+}
+
+.mm-net-option__check {
+  font-weight: 700;
+  color: #10b981;
+  font-size: 0.875rem;
+}
+
+.mm-net-dropdown__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  background: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.675rem;
+  color: #6b7280;
+  line-height: 1.3;
+}

@@ -5,16 +5,16 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-error);
   background: var(--color-error-bg);
   color: var(--color-error);
 }
 
 .mm-error-banner__icon {
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.15rem;
 }
 
 .mm-error-banner__body {
@@ -30,4 +30,5 @@
 
 .mm-error-banner__actions {
   flex-shrink: 0;
+  margin-top: var(--space-3);
 }
