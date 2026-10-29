@@ -7,9 +7,8 @@ import {
   Warehouse,
 } from "lucide-react";
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ConnectWalletButton } from "../components/wallet/ConnectWalletButton";
 import { useWeb3Wallet } from "../providers/Web3WalletContext";
 import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
 import { getRoleForWallet, type MandiMintRole } from "../auth/roles";
@@ -18,7 +17,7 @@ import "./onboarding.css";
 
 export function OnboardingPage() {
   const navigate = useNavigate();
-  const { connected, address, isCorrectNetwork, networkName, balance, isTestnet } =
+  const { connected, address, isCorrectNetwork, networkName, balance, isTestnet, walletType } =
     useWeb3Wallet();
 
   const activeAddress = address ?? null;
@@ -49,7 +48,7 @@ export function OnboardingPage() {
     }
   }, [selectedRole, activeAddress, selectLocalRole, navigate]);
 
-  // If not connected, show connection prompt
+  // If not connected, show sign-in prompt
   if (!connected || !activeAddress) {
     return (
       <section className="mm-onboarding mm-container" aria-labelledby="onboarding-title">
@@ -82,15 +81,17 @@ export function OnboardingPage() {
           </div>
 
           <h1 id="onboarding-title" style={{ fontSize: "1.5rem", marginBottom: "0.5rem", color: "var(--color-primary-text)" }}>
-            Connect Your Wallet
+            Sign In Required
           </h1>
           <p style={{ color: "var(--color-secondary-text)", fontSize: "0.9rem", marginBottom: "1.75rem", lineHeight: 1.5 }}>
             To select your role and access the MandiMint agricultural workspace,
-            please connect your Web3 wallet.
+            please sign in with your Google account.
           </p>
 
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <ConnectWalletButton variant="primary" />
+            <Link to="/auth" className="mm-btn mm-btn--primary">
+              Sign In →
+            </Link>
           </div>
         </div>
       </section>
@@ -151,6 +152,9 @@ export function OnboardingPage() {
             >
               <span className="mm-status-dot mm-status-dot--green" />
               <span>{truncateAddress(activeAddress, 6, 4)}</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--color-secondary-text)", fontFamily: "sans-serif" }}>
+                ({walletType === "privy" ? "Embedded Wallet" : "External Wallet"})
+              </span>
             </div>
           </div>
 

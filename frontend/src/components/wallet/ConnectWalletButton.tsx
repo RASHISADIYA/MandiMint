@@ -38,9 +38,6 @@ export function ConnectWalletButton({
     isManager,
     isOwner,
     isConnecting,
-    error,
-    connectBridgeKey,
-    connectInjected,
     disconnect,
     switchWalletToSelectedNetwork,
     selectedNetworkConfig,
@@ -50,7 +47,6 @@ export function ConnectWalletButton({
 
   const { role } = useAuthoritativeRole(connected);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
@@ -69,131 +65,18 @@ export function ConnectWalletButton({
 
   if (!connected) {
     return (
-      <>
-        <button
-          type="button"
-          className={`mm-bridgekey-btn mm-bridgekey-btn--connect ${
-            variant === "outline" ? "mm-bridgekey-btn--outline" : ""
-          } ${className}`}
-          onClick={() => setModalOpen(true)}
-          disabled={isConnecting}
-          title="Sign in or connect your Web3 wallet"
-        >
-          <Wallet size={16} aria-hidden="true" />
-          <span className="mm-bridgekey-btn__text">
-            {isConnecting ? "Connecting…" : "Sign In / Connect Wallet"}
-          </span>
-        </button>
-
-        {modalOpen && (
-          <div className="mm-modal-overlay" onClick={() => setModalOpen(false)}>
-            <div
-              className="mm-modal-card"
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="wallet-modal-title"
-            >
-              <div className="mm-modal-card__head">
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <Wallet size={18} style={{ color: "var(--color-primary)" }} />
-                  <h3 id="wallet-modal-title" className="mm-modal-card__title">
-                    Sign In / Connect Wallet
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  className="mm-modal-card__close"
-                  onClick={() => setModalOpen(false)}
-                  aria-label="Close dialog"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <p className="mm-modal-card__desc">
-                Connect your Web3 wallet to record agricultural batches, track produce
-                allocations, and verify records on MST Blockchain.
-              </p>
-
-              {error && (
-                <div
-                  style={{
-                    padding: "0.6rem 0.8rem",
-                    marginBottom: "1rem",
-                    background: "var(--color-error-bg)",
-                    border: "1px solid var(--color-error)",
-                    borderRadius: "6px",
-                    color: "var(--color-error)",
-                    fontSize: "0.825rem",
-                  }}
-                >
-                  ⚠️ {error}
-                </div>
-              )}
-
-              <div className="mm-wallet-options">
-                <button
-                  type="button"
-                  className="mm-wallet-option mm-wallet-option--primary"
-                  onClick={async () => {
-                    setModalOpen(false);
-                    try {
-                      await connectBridgeKey();
-                    } catch {
-                      await connectInjected();
-                    }
-                  }}
-                >
-                  <div className="mm-wallet-option__left">
-                    <span className="mm-wallet-option__icon">🌉</span>
-                    <div>
-                      <p className="mm-wallet-option__name">
-                        BridgeKey Wallet
-                        <span className="mm-tag mm-tag--gold">Official</span>
-                      </p>
-                      <p className="mm-wallet-option__hint">
-                        MST Blockchain official non-custodial extension
-                      </p>
-                    </div>
-                  </div>
-                  <span className="mm-wallet-option__arrow">→</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="mm-wallet-option"
-                  onClick={async () => {
-                    setModalOpen(false);
-                    await connectInjected();
-                  }}
-                >
-                  <div className="mm-wallet-option__left">
-                    <span className="mm-wallet-option__icon">🦊</span>
-                    <div>
-                      <p className="mm-wallet-option__name">Browser Web3 / MetaMask</p>
-                      <p className="mm-wallet-option__hint">
-                        Any EIP-1193 compatible browser wallet
-                      </p>
-                    </div>
-                  </div>
-                  <span className="mm-wallet-option__arrow">→</span>
-                </button>
-
-                <a
-                  href="https://chromewebstore.google.com/detail/bridgekey/bfjojdcfenehemjgjlepdjomkpginlkg"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mm-wallet-install-link"
-                >
-                  Don&apos;t have BridgeKey? Install extension{" "}
-                  <ExternalLink size={13} aria-hidden="true" />
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
+      <Link
+        to="/auth"
+        className={`mm-bridgekey-btn mm-bridgekey-btn--connect ${
+          variant === "outline" ? "mm-bridgekey-btn--outline" : ""
+        } ${className}`}
+        title="Sign in to MandiMint"
+      >
+        <Wallet size={16} aria-hidden="true" />
+        <span className="mm-bridgekey-btn__text">
+          {isConnecting ? "Connecting…" : "Sign In"}
+        </span>
+      </Link>
     );
   }
 

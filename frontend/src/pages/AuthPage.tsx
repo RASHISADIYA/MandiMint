@@ -1,24 +1,42 @@
 import {
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Flame,
   Globe,
   Leaf,
+  Mail,
   ShieldCheck,
   Wallet,
 } from "lucide-react";
+import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { ConnectWalletButton } from "../components/wallet/ConnectWalletButton";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
+import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
+import { EmailOtpAuthPanel } from "../components/auth/EmailOtpAuthPanel";
 import { useWeb3Wallet, MST_NETWORKS } from "../providers/Web3WalletContext";
 import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
 import "./auth.css";
 
 export function AuthPage() {
   const web3 = useWeb3Wallet();
-  const { connected, address, selectedNetworkConfig } = web3;
+  const {
+    connected,
+    address,
+    selectedNetworkConfig,
+    isConnecting,
+    error,
+    connectBridgeKey,
+    connectInjected,
+  } = web3;
   const { role } = useAuthoritativeRole(connected);
 
-  // If already connected, route to role dashboard or onboarding
+  const [showEmailOtp, setShowEmailOtp] = useState(false);
+  const [showExternal, setShowExternal] = useState(false);
+  const [externalError, setExternalError] = useState<string | null>(null);
+
+  // If already connected with a wallet, route to role dashboard or onboarding
   if (connected && address) {
     if (role === "farmer") {
       return <Navigate to="/app/farmer" replace />;
@@ -38,11 +56,12 @@ export function AuthPage() {
             Agricultural Supply Chain Traceability
           </p>
           <h1 id="auth-title" className="mm-auth__title">
-            Sign In / Connect Wallet
+            Sign In to MandiMint
           </h1>
           <p className="mm-auth__lead">
-            Connect your Web3 wallet to manage agricultural crop batches, verify
-            farmer delivery allocations, and audit tamper-evident records on MST Blockchain.
+            Sign in with Google to create or access your secure embedded Web3 wallet.
+            Seamlessly manage crop batches, verify produce allocations, and record
+            tamper-evident deliveries on MST Blockchain.
           </p>
 
           <div className="mm-auth__aside">
@@ -50,22 +69,25 @@ export function AuthPage() {
               <li>
                 <Wallet aria-hidden="true" />
                 <span>
-                  <strong>Non-Custodial Web3 Access</strong>
-                  Connect using BridgeKey, MetaMask, or any standard EIP-1193 browser extension.
+                  <strong>Automatic Embedded EVM Wallet</strong>
+                  Created automatically upon signing in. No browser extensions,
+                  seed phrases, or private key management needed.
                 </span>
               </li>
               <li>
                 <ShieldCheck aria-hidden="true" />
                 <span>
                   <strong>On-Chain Cryptographic Proofs</strong>
-                  Produce conservation and whole-kg allocations are strictly verified on the smart contract.
+                  Produce conservation and whole-kg allocations are strictly
+                  verified by MandiMint smart contracts.
                 </span>
               </li>
               <li>
                 <Globe aria-hidden="true" />
                 <span>
                   <strong>Public Transparency</strong>
-                  All recorded batches can be independently inspected by buyers, auditors, and export boards on MSTScan.
+                  All recorded batches can be independently inspected by buyers,
+                  auditors, and export boards on MSTScan.
                 </span>
               </li>
             </ul>
@@ -83,7 +105,14 @@ export function AuthPage() {
               boxShadow: "var(--shadow-sm)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1rem",
+              }}
+            >
               <span
                 style={{
                   fontSize: "0.75rem",
@@ -92,9 +121,15 @@ export function AuthPage() {
                   color: "var(--color-agricultural-green)",
                 }}
               >
-                Step 1: Connect Wallet
+                Step 1: Sign In
               </span>
-              <StatusBadge variant={selectedNetworkConfig.id === "mstTestnet" ? "success" : "neutral"}>
+              <StatusBadge
+                variant={
+                  selectedNetworkConfig.id === "mstTestnet"
+                    ? "success"
+                    : "neutral"
+                }
+              >
                 {selectedNetworkConfig.name} ({selectedNetworkConfig.chainId})
               </StatusBadge>
             </div>
@@ -107,7 +142,7 @@ export function AuthPage() {
                 color: "var(--color-primary-text)",
               }}
             >
-              Sign In With Your Wallet
+              Welcome to MandiMint
             </h2>
 
             <p
@@ -115,22 +150,152 @@ export function AuthPage() {
               style={{
                 fontSize: "0.9rem",
                 color: "var(--color-secondary-text)",
-                marginBottom: "1.75rem",
+                marginBottom: "1.5rem",
                 lineHeight: 1.5,
               }}
             >
-              Click below to connect your wallet. Immediately after connecting,
-              you will proceed to Step 2 to select your role (Farmer or FPO Manager).
+              Sign in to automatically create or access your embedded EVM wallet.
+              Immediately after sign-in, you will proceed to Step 2 to select your role.
             </p>
 
-            {/* Single Primary Action */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <ConnectWalletButton variant="primary" />
+            {/* In-Flight Connecting / Wallet Creation State */}
+            {isConnecting && (
+              <div
+                style={{
+                  padding: "0.85rem",
+                  marginBottom: "1.25rem",
+                  background: "var(--color-background)",
+                  border: "1px solid var(--color-borders)",
+                  borderRadius: "var(--radius-md)",
+                  textAlign: "center",
+                }}
+              >
+                <StatusBadge variant="pending">
+                  Setting up your embedded wallet…
+                </StatusBadge>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {error && (
+              <div style={{ marginBottom: "1.25rem" }}>
+                <ErrorBanner message={error} />
+              </div>
+            )}
+
+            {/* Primary Action: Continue with Google */}
+            <div style={{ marginBottom: "1rem" }}>
+              <GoogleSignInButton showStatusBadge disabled={isConnecting} />
             </div>
 
+            {/* Secondary Option: Email OTP */}
+            <div style={{ marginTop: "1rem" }}>
+              <button
+                type="button"
+                onClick={() => setShowEmailOtp((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: "0.4rem 0",
+                  fontSize: "0.85rem",
+                  color: "var(--color-agricultural-green)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontWeight: 600,
+                }}
+              >
+                <Mail size={14} />
+                <span>{showEmailOtp ? "Hide email sign-in" : "Or sign in with email OTP"}</span>
+                {showEmailOtp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              {showEmailOtp && (
+                <div
+                  style={{
+                    marginTop: "0.75rem",
+                    padding: "1rem",
+                    background: "var(--color-background)",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--color-borders)",
+                  }}
+                >
+                  <EmailOtpAuthPanel disabled={isConnecting} />
+                </div>
+              )}
+            </div>
+
+            {/* Preserved External Web3 Wallet Fallback */}
+            <div style={{ marginTop: "1rem", borderTop: "1px solid var(--color-borders)", paddingTop: "1rem" }}>
+              <button
+                type="button"
+                onClick={() => setShowExternal((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: "0.3rem 0",
+                  fontSize: "0.8rem",
+                  color: "var(--color-secondary-text)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                }}
+              >
+                <span>Looking to connect a browser extension (BridgeKey / MetaMask)?</span>
+                {showExternal ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </button>
+
+              {showExternal && (
+                <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {externalError && <ErrorBanner message={externalError} />}
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className="mm-btn mm-btn--secondary"
+                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.8rem" }}
+                      disabled={isConnecting}
+                      onClick={async () => {
+                        setExternalError(null);
+                        try {
+                          await connectBridgeKey();
+                        } catch (err) {
+                          setExternalError(
+                            err instanceof Error ? err.message : "Failed to connect BridgeKey."
+                          );
+                        }
+                      }}
+                    >
+                      Connect BridgeKey
+                    </button>
+                    <button
+                      type="button"
+                      className="mm-btn mm-btn--secondary"
+                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.8rem" }}
+                      disabled={isConnecting}
+                      onClick={async () => {
+                        setExternalError(null);
+                        try {
+                          await connectInjected();
+                        } catch (err) {
+                          setExternalError(
+                            err instanceof Error ? err.message : "Failed to connect MetaMask."
+                          );
+                        }
+                      }}
+                    >
+                      Connect Browser Web3 / MetaMask
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Faucet Link */}
             <div
               style={{
-                marginTop: "1.75rem",
+                marginTop: "1.5rem",
                 padding: "0.85rem",
                 background: "var(--color-background)",
                 border: "1px solid var(--color-borders)",
@@ -164,6 +329,7 @@ export function AuthPage() {
               </div>
             </div>
 
+            {/* Batch Explorer Link */}
             <div style={{ marginTop: "1.25rem", textAlign: "center" }}>
               <Link
                 to="/app/batches"

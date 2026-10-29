@@ -94,7 +94,7 @@ export function Header() {
           ))}
           <div className="mm-mobile-nav__cta" style={{ marginTop: "1rem" }}>
             <Link to="/auth" onClick={closeMobile} className="mm-btn mm-btn--primary mm-btn--full">
-              Sign In / Connect Wallet
+              Sign In
             </Link>
           </div>
         </nav>

@@ -35,7 +35,17 @@ export function AuthHeaderActions() {
       )}
 
       <NetworkSelector />
-      <ConnectWalletButton />
+      {connected ? (
+        <ConnectWalletButton />
+      ) : (
+        <Link
+          to="/auth"
+          className="mm-btn mm-btn--primary"
+          style={{ padding: "0.45rem 0.85rem", fontSize: "0.85rem" }}
+        >
+          Sign In
+        </Link>
+      )}
     </div>
   );
 }
