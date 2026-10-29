@@ -85,7 +85,7 @@ export function OnboardingPage() {
           </h1>
           <p style={{ color: "var(--color-secondary-text)", fontSize: "0.9rem", marginBottom: "1.75rem", lineHeight: 1.5 }}>
             To select your role and access the MandiMint agricultural workspace,
-            please sign in with your Google account.
+            please sign in or connect your Web3 wallet.
           </p>
 
           <div style={{ display: "flex", justifyContent: "center" }}>

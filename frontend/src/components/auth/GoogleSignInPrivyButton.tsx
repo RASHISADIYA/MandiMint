@@ -14,6 +14,21 @@ export interface GoogleSignInPrivyButtonProps {
   disabled?: boolean;
 }
 
+function formatGoogleError(error: unknown): string {
+  const message = formatAuthError(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("not allowed") ||
+    normalized.includes("app config") ||
+    normalized.includes("disallowed")
+  ) {
+    return "Google sign-in is not enabled in your Privy dashboard. Enable Google in Login Methods, or use Email OTP or an existing wallet below.";
+  }
+
+  return message || "Google sign-in failed. Please try again.";
+}
+
 export function GoogleSignInPrivyButton({
   className = "",
   showStatusBadge = false,
@@ -34,7 +49,7 @@ export function GoogleSignInPrivyButton({
         setMessage("Sign-in was cancelled.");
       } else {
         setLoginUiState("login_failed");
-        setMessage(formatAuthError(error) || "Google sign-in failed. Please try again.");
+        setMessage(formatGoogleError(error));
       }
     },
   });
@@ -56,7 +71,7 @@ export function GoogleSignInPrivyButton({
         setMessage("Sign-in was cancelled.");
       } else {
         setLoginUiState("login_failed");
-        setMessage(formatAuthError(error) || "Google sign-in failed. Please try again.");
+        setMessage(formatGoogleError(error));
       }
     }
   }, [initOAuth]);

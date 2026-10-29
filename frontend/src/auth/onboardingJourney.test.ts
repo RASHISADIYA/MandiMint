@@ -4,11 +4,11 @@ import { getRoleForWallet, setRoleForWallet, type MandiMintRole } from "./roles"
 import { getNetworkConfig } from "../config/networks";
 import { buildPrivyConfig } from "../providers/privyConfig";
 
-describe("Audited Google Sign-In and Embedded EVM Wallet Onboarding Flow", () => {
-  it("verifies Privy configuration has Google as primary login and both MST networks supported", () => {
+describe("Audited Email OTP and Embedded EVM Wallet Onboarding Flow", () => {
+  it("verifies Privy configuration has Email OTP as login method and both MST networks supported", () => {
     const config = buildPrivyConfig();
 
-    // Primary login methods include google and email
+    // Supported login methods include google and email
     expect(config.loginMethods).toEqual(["google", "email"]);
 
     // Embedded wallets are configured to create on login for users without wallets

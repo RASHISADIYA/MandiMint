@@ -33,7 +33,6 @@ export function AuthPage() {
   const { role } = useAuthoritativeRole(connected);
 
   const [showEmailOtp, setShowEmailOtp] = useState(false);
-  const [showExternal, setShowExternal] = useState(false);
   const [externalError, setExternalError] = useState<string | null>(null);
 
   // If already connected with a wallet, route to role dashboard or onboarding
@@ -59,9 +58,9 @@ export function AuthPage() {
             Sign In to MandiMint
           </h1>
           <p className="mm-auth__lead">
-            Sign in with Google to create or access your secure embedded Web3 wallet.
-            Seamlessly manage crop batches, verify produce allocations, and record
-            tamper-evident deliveries on MST Blockchain.
+            Sign in with Google to create or access your secure embedded Web3 wallet,
+            or connect your existing BridgeKey / MetaMask wallet to record batches and
+            verify crop allocations on MST Blockchain.
           </p>
 
           <div className="mm-auth__aside">
@@ -69,9 +68,9 @@ export function AuthPage() {
               <li>
                 <Wallet aria-hidden="true" />
                 <span>
-                  <strong>Automatic Embedded EVM Wallet</strong>
-                  Created automatically upon signing in. No browser extensions,
-                  seed phrases, or private key management needed.
+                  <strong>Flexible Wallet Options</strong>
+                  Sign in with Google or Email for an automatic embedded EVM wallet,
+                  or connect your existing BridgeKey / MetaMask extension wallet.
                 </span>
               </li>
               <li>
@@ -95,252 +94,172 @@ export function AuthPage() {
         </div>
 
         <div className="mm-auth__card">
-          <div
-            className="mm-auth__panel"
-            style={{
-              padding: "2rem",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-borders)",
-              boxShadow: "var(--shadow-sm)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1rem",
-              }}
+          <div className="mm-auth__card-header">
+            <span className="mm-auth__step-badge">
+              Step 1: Sign In
+            </span>
+            <StatusBadge
+              variant={
+                selectedNetworkConfig.id === "mstTestnet"
+                  ? "success"
+                  : "neutral"
+              }
             >
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  color: "var(--color-agricultural-green)",
-                }}
-              >
-                Step 1: Sign In
-              </span>
-              <StatusBadge
-                variant={
-                  selectedNetworkConfig.id === "mstTestnet"
-                    ? "success"
-                    : "neutral"
+              {selectedNetworkConfig.name} ({selectedNetworkConfig.chainId})
+            </StatusBadge>
+          </div>
+
+          <h2 className="mm-auth__panel-title">
+            Welcome to MandiMint
+          </h2>
+
+          <p className="mm-auth__panel-lead">
+            Sign in with your Google account to create or access your embedded wallet,
+            or connect an existing Web3 wallet below.
+          </p>
+
+          {/* Error Display */}
+          {error && (
+            <div style={{ marginBottom: "1.25rem" }}>
+              <ErrorBanner message={error} />
+            </div>
+          )}
+
+          {/* Primary Action: Continue with Google */}
+          <div className="mm-auth__google-wrap">
+            <GoogleSignInButton showStatusBadge disabled={isConnecting} />
+          </div>
+
+          {/* Alternative: Email OTP Toggle */}
+          <div className="mm-auth__email-wrap">
+            <button
+              type="button"
+              className="mm-auth__email-toggle"
+              onClick={() => setShowEmailOtp((prev) => !prev)}
+            >
+              <Mail size={15} />
+              <span>{showEmailOtp ? "Hide email code sign-in" : "Or sign in with email code (OTP)"}</span>
+              {showEmailOtp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showEmailOtp && (
+              <div className="mm-auth__email-panel">
+                <EmailOtpAuthPanel disabled={isConnecting} />
+              </div>
+            )}
+          </div>
+
+          {/* Prominent Section: Connect Existing Web3 Wallet */}
+          <div className="mm-auth__divider-wrap">
+            <div className="mm-auth__divider-line" />
+            <span className="mm-auth__divider-pill">
+              Or Connect Existing Wallet
+            </span>
+          </div>
+
+          {externalError && (
+            <div style={{ marginBottom: "0.85rem" }}>
+              <ErrorBanner message={externalError} />
+            </div>
+          )}
+
+          <div className="mm-auth__wallet-options">
+            {/* BridgeKey Official Extension */}
+            <button
+              type="button"
+              className="mm-auth__wallet-card"
+              disabled={isConnecting}
+              onClick={async () => {
+                setExternalError(null);
+                try {
+                  await connectBridgeKey();
+                } catch (err) {
+                  setExternalError(
+                    err instanceof Error ? err.message : "Failed to connect BridgeKey."
+                  );
                 }
-              >
-                {selectedNetworkConfig.name} ({selectedNetworkConfig.chainId})
-              </StatusBadge>
-            </div>
-
-            <h2
-              className="mm-auth__panel-title"
-              style={{
-                fontSize: "1.4rem",
-                marginBottom: "0.5rem",
-                color: "var(--color-primary-text)",
               }}
             >
-              Welcome to MandiMint
-            </h2>
-
-            <p
-              className="mm-auth__panel-lead"
-              style={{
-                fontSize: "0.9rem",
-                color: "var(--color-secondary-text)",
-                marginBottom: "1.5rem",
-                lineHeight: 1.5,
-              }}
-            >
-              Sign in to automatically create or access your embedded EVM wallet.
-              Immediately after sign-in, you will proceed to Step 2 to select your role.
-            </p>
-
-            {/* In-Flight Connecting / Wallet Creation State */}
-            {isConnecting && (
-              <div
-                style={{
-                  padding: "0.85rem",
-                  marginBottom: "1.25rem",
-                  background: "var(--color-background)",
-                  border: "1px solid var(--color-borders)",
-                  borderRadius: "var(--radius-md)",
-                  textAlign: "center",
-                }}
-              >
-                <StatusBadge variant="pending">
-                  Setting up your embedded wallet…
-                </StatusBadge>
-              </div>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <div style={{ marginBottom: "1.25rem" }}>
-                <ErrorBanner message={error} />
-              </div>
-            )}
-
-            {/* Primary Action: Continue with Google */}
-            <div style={{ marginBottom: "1rem" }}>
-              <GoogleSignInButton showStatusBadge disabled={isConnecting} />
-            </div>
-
-            {/* Secondary Option: Email OTP */}
-            <div style={{ marginTop: "1rem" }}>
-              <button
-                type="button"
-                onClick={() => setShowEmailOtp((prev) => !prev)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "0.4rem 0",
-                  fontSize: "0.85rem",
-                  color: "var(--color-agricultural-green)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  fontWeight: 600,
-                }}
-              >
-                <Mail size={14} />
-                <span>{showEmailOtp ? "Hide email sign-in" : "Or sign in with email OTP"}</span>
-                {showEmailOtp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </button>
-
-              {showEmailOtp && (
-                <div
-                  style={{
-                    marginTop: "0.75rem",
-                    padding: "1rem",
-                    background: "var(--color-background)",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--color-borders)",
-                  }}
-                >
-                  <EmailOtpAuthPanel disabled={isConnecting} />
-                </div>
-              )}
-            </div>
-
-            {/* Preserved External Web3 Wallet Fallback */}
-            <div style={{ marginTop: "1rem", borderTop: "1px solid var(--color-borders)", paddingTop: "1rem" }}>
-              <button
-                type="button"
-                onClick={() => setShowExternal((prev) => !prev)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "0.3rem 0",
-                  fontSize: "0.8rem",
-                  color: "var(--color-secondary-text)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                }}
-              >
-                <span>Looking to connect a browser extension (BridgeKey / MetaMask)?</span>
-                {showExternal ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              </button>
-
-              {showExternal && (
-                <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {externalError && <ErrorBanner message={externalError} />}
-                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      className="mm-btn mm-btn--secondary"
-                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.8rem" }}
-                      disabled={isConnecting}
-                      onClick={async () => {
-                        setExternalError(null);
-                        try {
-                          await connectBridgeKey();
-                        } catch (err) {
-                          setExternalError(
-                            err instanceof Error ? err.message : "Failed to connect BridgeKey."
-                          );
-                        }
-                      }}
-                    >
-                      Connect BridgeKey
-                    </button>
-                    <button
-                      type="button"
-                      className="mm-btn mm-btn--secondary"
-                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.8rem" }}
-                      disabled={isConnecting}
-                      onClick={async () => {
-                        setExternalError(null);
-                        try {
-                          await connectInjected();
-                        } catch (err) {
-                          setExternalError(
-                            err instanceof Error ? err.message : "Failed to connect MetaMask."
-                          );
-                        }
-                      }}
-                    >
-                      Connect Browser Web3 / MetaMask
-                    </button>
+              <div className="mm-auth__wallet-left">
+                <div className="mm-auth__wallet-icon">🌉</div>
+                <div className="mm-auth__wallet-meta">
+                  <div className="mm-auth__wallet-title">
+                    BridgeKey Wallet
+                    <span className="mm-tag mm-tag--gold" style={{ fontSize: "0.65rem", padding: "0.15rem 0.45rem" }}>
+                      Official MST
+                    </span>
+                  </div>
+                  <div className="mm-auth__wallet-desc">
+                    MST Blockchain official non-custodial extension
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+              <span className="mm-auth__wallet-arrow">→</span>
+            </button>
 
-            {/* Faucet Link */}
-            <div
-              style={{
-                marginTop: "1.5rem",
-                padding: "0.85rem",
-                background: "var(--color-background)",
-                border: "1px solid var(--color-borders)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "0.825rem",
-                color: "var(--color-secondary-text)",
+            {/* Browser Web3 / MetaMask */}
+            <button
+              type="button"
+              className="mm-auth__wallet-card"
+              disabled={isConnecting}
+              onClick={async () => {
+                setExternalError(null);
+                try {
+                  await connectInjected();
+                } catch (err) {
+                  setExternalError(
+                    err instanceof Error ? err.message : "Failed to connect MetaMask."
+                  );
+                }
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span>Need testnet coins?</span>
-                <a
-                  href={MST_NETWORKS.testnet.faucetUrl || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: "var(--color-warning)",
-                    fontWeight: 600,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.3rem",
-                  }}
-                >
-                  <Flame size={13} /> Claim Free tMSTC <ExternalLink size={11} />
-                </a>
+              <div className="mm-auth__wallet-left">
+                <div className="mm-auth__wallet-icon">🦊</div>
+                <div className="mm-auth__wallet-meta">
+                  <div className="mm-auth__wallet-title">
+                    Browser Web3 / MetaMask
+                  </div>
+                  <div className="mm-auth__wallet-desc">
+                    Any EIP-1193 compatible browser extension
+                  </div>
+                </div>
               </div>
+              <span className="mm-auth__wallet-arrow">→</span>
+            </button>
+
+            <div className="mm-auth__extension-link">
+              <a
+                href="https://chromewebstore.google.com/detail/bridgekey/bfjojdcfenehemjgjlepdjomkpginlkg"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Need BridgeKey extension? Install from Chrome Web Store <ExternalLink size={11} />
+              </a>
+            </div>
+          </div>
+
+          {/* Utilities */}
+          <div className="mm-auth__utilities">
+            <div className="mm-auth__utility-box">
+              <span>Need testnet coins?</span>
+              <a
+                href={MST_NETWORKS.testnet.faucetUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mm-auth__utility-link"
+                style={{ color: "var(--color-warning)" }}
+              >
+                <Flame size={13} /> Claim Free tMSTC <ExternalLink size={11} />
+              </a>
             </div>
 
-            {/* Batch Explorer Link */}
-            <div style={{ marginTop: "1.25rem", textAlign: "center" }}>
+            <div className="mm-auth__utility-box">
+              <span>Public verification:</span>
               <Link
                 to="/app/batches"
-                style={{
-                  fontSize: "0.85rem",
-                  color: "var(--color-agricultural-green)",
-                  fontWeight: 600,
-                  textDecoration: "underline",
-                }}
+                className="mm-auth__utility-link"
               >
-                Browse verified crop batches without connecting →
+                <Globe size={13} /> Browse Verified Batches →
               </Link>
             </div>
           </div>
