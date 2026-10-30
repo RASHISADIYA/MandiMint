@@ -27,7 +27,7 @@
 | **Block Number** | `6640665` | `21774067` |
 | **Deployer / Owner** | [`0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0`](https://testnet.mstscan.com/address/0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0) | [`0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0`](https://mstscan.com/address/0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0) |
 | **Deployment Status** | Complete & Verified on-chain | Complete & Verified on-chain (`7,642` chars bytecode) |
-| **Deployment Record** | [`deployments/mstTestnet/MandiMint.json`](deployments/mstTestnet/MandiMint.json) | [`deployments/mstMainnet/MandiMint.json`](deployments/mstMainnet/MandiMint.json) |
+| **Deployment Record** | [`deployments/mstTestnet/MandiMint.json`](deployments/mstTestnet/MandiMint.json) · [Explorer Record](https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C) | [`deployments/mstMainnet/MandiMint.json`](deployments/mstMainnet/MandiMint.json) · [Explorer Record](https://mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C) |
 
 > **Live DApp URL**: [https://mandi-mint.vercel.app](https://mandi-mint.vercel.app)  
 > MandiMint is officially deployed and verified on both **MST Testnet (Chain ID 91562037)** and **MST Mainnet (Chain ID 4646)**. Users and FPO managers can seamlessly switch networks via the application's network selector to record batches and verify provenance on either environment.
@@ -261,7 +261,11 @@ When an authorized manager calls `recordBatch()`, the contract executes a compre
 - **Currency Symbol**: `tMSTC`
 - **Block Explorer**: `https://testnet.mstscan.com`
 - **Faucet**: `https://faucet.mstblockchain.com`
-- **Deployed MandiMint Contract**: `0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`
+- **Deployed MandiMint Contract**: [`0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`](https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C)
+- **Deployment Transaction**: [`0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf`](https://testnet.mstscan.com/tx/0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf)
+- **Deployment Block**: `6640665`
+- **Deployment Status**: **Verified Live on MST Testnet**
+- **Deployment Record**: [`deployments/mstTestnet/MandiMint.json`](deployments/mstTestnet/MandiMint.json)
 
 ### MST Mainnet (Chain ID `4646`)
 - **Network Name**: `MST Mainnet`
@@ -269,7 +273,7 @@ When an authorized manager calls `recordBatch()`, the contract executes a compre
 - **Chain ID**: `4646` (`0x1226`)
 - **Currency Symbol**: `MSTC`
 - **Block Explorer**: `https://mstscan.com`
-- **Deployed MandiMint Contract**: `0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`
+- **Deployed MandiMint Contract**: [`0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`](https://mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C)
 - **Deployment Transaction**: [`0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e`](https://mstscan.com/tx/0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e)
 - **Deployment Block**: `21774067`
 - **Deployment Status**: **Verified Live on MST Mainnet** (`7,642` characters on-chain bytecode)
