@@ -1,38 +1,50 @@
+/* MandiMint Web3 Wallet & Connected Account Styles */
+
+/* ---------------------------------------------------- */
+/* Base Trigger & Connect Buttons                       */
+/* ---------------------------------------------------- */
 .mm-bridgekey-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
+  padding: 0.45rem 0.85rem;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  border-radius: 9999px;
+  border-radius: var(--radius-md, 8px);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid transparent;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--color-borders, #dce3d9);
+  background: var(--color-clean-white, #ffffff);
+  color: var(--color-primary-text, #253329);
+  line-height: 1.4;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .mm-bridgekey-btn--connect {
-  background: var(--color-deep-forest);
-  color: var(--color-clean-white);
+  background: var(--color-deep-forest, #214e34);
+  color: var(--color-clean-white, #ffffff);
+  border-color: transparent;
   box-shadow: 0 2px 8px rgba(33, 78, 52, 0.2);
+  text-decoration: none;
 }
 
 .mm-bridgekey-btn--connect:hover:not(:disabled) {
-  background: var(--color-agricultural-green);
+  background: var(--color-agricultural-green, #3f7650);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(33, 78, 52, 0.3);
+  box-shadow: 0 4px 14px rgba(33, 78, 52, 0.28);
 }
 
 .mm-bridgekey-btn--outline {
   background: transparent;
-  color: var(--color-deep-forest);
-  border: 1px solid var(--color-borders);
+  color: var(--color-deep-forest, #214e34);
+  border: 1px solid var(--color-borders, #dce3d9);
 }
 
 .mm-bridgekey-btn--outline:hover:not(:disabled) {
-  background: var(--color-soft-sage);
-  border-color: var(--color-agricultural-green);
+  background: var(--color-soft-sage, #dce8d8);
+  border-color: var(--color-agricultural-green, #3f7650);
 }
 
 .mm-bridgekey-btn--connect:disabled {
@@ -54,6 +66,9 @@
   text-transform: uppercase;
 }
 
+/* ---------------------------------------------------- */
+/* User Container & Network/Balance Pill               */
+/* ---------------------------------------------------- */
 .mm-bridgekey-user {
   position: relative;
   display: inline-flex;
@@ -64,40 +79,51 @@
 .mm-bridgekey-pill {
   display: none;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  background: #f1f8f4;
-  border: 1px solid #cce5d6;
+  gap: 0.45rem;
+  padding: 0.38rem 0.75rem;
+  background: linear-gradient(180deg, #f7faf8 0%, #edf5f0 100%);
+  border: 1px solid var(--color-borders, #dce3d9);
   border-radius: 9999px;
   font-size: 0.775rem;
-  color: #174c3c;
+  color: var(--color-deep-forest, #214e34);
   font-weight: 500;
+  box-shadow: 0 1px 3px rgba(33, 78, 52, 0.04);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 680px) {
   .mm-bridgekey-pill {
     display: inline-flex;
   }
 }
 
+.mm-bridgekey-pill__network {
+  font-weight: 600;
+  color: var(--color-primary-text, #253329);
+  font-size: 0.75rem;
+}
+
 .mm-bridgekey-pill__balance {
   font-weight: 700;
   color: #047857;
-  padding-left: 0.25rem;
-  border-left: 1px solid #cce5d6;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--color-borders, #dce3d9);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
+/* Status Indicator Dot */
 .mm-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .mm-status-dot--green {
   background-color: #10b981;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-  animation: pulse-green 2s infinite;
+  animation: mm-pulse-green 2s infinite ease-in-out;
 }
 
 .mm-status-dot--amber {
@@ -105,78 +131,96 @@
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
 }
 
-@keyframes pulse-green {
+@keyframes mm-pulse-green {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
   }
 }
 
+/* ---------------------------------------------------- */
+/* Active Trigger Button (Connected Wallet)            */
+/* ---------------------------------------------------- */
 .mm-bridgekey-btn--active {
-  background: #ffffff;
-  color: #172720;
-  border: 1px solid #dce7df;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  background: var(--color-clean-white, #ffffff);
+  color: var(--color-primary-text, #172720);
+  border: 1px solid var(--color-borders, #dce7df);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .mm-bridgekey-btn--active:hover {
   background: #f9fbf9;
   border-color: #a8c7ad;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(33, 78, 52, 0.08);
+}
+
+.mm-bridgekey-btn--open {
+  background: #f4f8f5;
+  border-color: var(--color-agricultural-green, #3f7650);
+  box-shadow: 0 0 0 3px rgba(33, 78, 52, 0.12);
+}
+
+.mm-bridgekey-btn__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-deep-forest, #214e34);
 }
 
 .mm-bridgekey-btn__addr {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1e293b;
 }
 
-.mm-role-pill {
-  font-size: 0.65rem;
-  padding: 0.15rem 0.4rem;
+.mm-bridgekey-btn__role {
+  font-size: 0.6875rem;
+  background: var(--color-soft-sage, #dce8d8);
+  color: var(--color-deep-forest, #214e34);
+  padding: 0.12rem 0.45rem;
   border-radius: 4px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
-.mm-role-pill--owner {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
+.mm-bridgekey-btn__chevron {
+  color: var(--color-secondary-text, #667368);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mm-role-pill--manager {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+.mm-bridgekey-btn__chevron--open {
+  transform: rotate(180deg);
 }
 
-/* Dropdown */
-.mm-dropdown-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 998;
-}
-
-.mm-bridgekey-dropdown {
+/* ---------------------------------------------------- */
+/* Dropdown Menu Popover (.mm-bridgekey-menu)          */
+/* ---------------------------------------------------- */
+.mm-bridgekey-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 300px;
+  width: 340px;
+  max-width: calc(100vw - 1.5rem);
   background: #ffffff;
-  border: 1px solid #dce7df;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(15, 61, 46, 0.15);
-  z-index: 999;
+  border: 1px solid var(--color-borders, #dce7df);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px -6px rgba(15, 61, 46, 0.18), 0 4px 16px -2px rgba(15, 61, 46, 0.08);
+  z-index: 1000;
   overflow: hidden;
-  animation: dropdown-fade-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mm-bridgekey-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
 }
 
-@keyframes dropdown-fade-in {
+@keyframes mm-bridgekey-pop {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.98);
+    transform: translateY(-6px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -184,130 +228,405 @@
   }
 }
 
-.mm-bridgekey-dropdown__header {
-  padding: 1rem;
-  background: #f7faf8;
-  border-bottom: 1px solid #eef3f0;
+/* Dropdown Header */
+.mm-bridgekey-menu__head {
+  padding: 0.95rem 1.05rem 0.85rem;
+  background: linear-gradient(180deg, #f7faf8 0%, #edf4f0 100%);
+  border-bottom: 1px solid var(--color-borders, #dce7df);
 }
 
-.mm-dropdown__label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #52645b;
-  font-weight: 600;
-  margin: 0 0 0.35rem 0;
-}
-
-.mm-dropdown__address-row {
+.mm-bridgekey-menu__head-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
-  border: 1px solid #dce7df;
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  margin-bottom: 0.75rem;
-}
-
-.mm-dropdown__address {
-  font-size: 0.75rem;
-  color: #172720;
-  word-break: break-all;
-  max-width: 210px;
-}
-
-.mm-dropdown__copy-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #52645b;
-  padding: 0.2rem;
-  border-radius: 4px;
-}
-
-.mm-dropdown__copy-btn:hover {
-  color: #174c3c;
-  background: #f1f5f2;
-}
-
-.mm-dropdown__stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
-.mm-stat__label {
-  display: block;
-  color: #6b7280;
-  font-size: 0.7rem;
-}
-
-.mm-stat__value {
-  display: block;
-  font-weight: 600;
-  color: #111827;
-}
-
-.mm-bridgekey-dropdown__menu {
-  padding: 0.5rem;
-}
-
-.mm-dropdown__item {
+.mm-bridgekey-menu__status-label {
   display: flex;
   align-items: center;
+  gap: 0.4rem;
+}
+
+.mm-bridgekey-menu__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #3b5f4c;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mm-bridgekey-menu__net-chip {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #174c3c;
+  border: 1px solid #cce5d6;
+  white-space: nowrap;
+}
+
+/* Address Card inside Header */
+.mm-bridgekey-menu__address-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
-  width: 100%;
-  padding: 0.6rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--color-borders, #dce7df);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.mm-bridgekey-menu__address-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mm-bridgekey-menu__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.mm-bridgekey-menu__balance-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #047857;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.mm-bridgekey-menu__action-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #f1f8f4;
+  border: 1px solid #cce5d6;
   border-radius: 6px;
-  background: none;
-  border: none;
+  padding: 0.35rem 0.55rem;
+  color: #174c3c;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
   font-family: inherit;
-  font-size: 0.825rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mm-bridgekey-menu__action-icon:hover {
+  background: #dff2e7;
+  color: #065f46;
+  border-color: #a7f3d0;
+  transform: translateY(-1px);
+}
+
+.mm-bridgekey-menu__action-icon--copied {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.mm-bridgekey-menu__copy-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.mm-bridgekey-menu__role-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.65rem;
+  gap: 0.5rem;
+}
+
+.mm-bridgekey-menu__chain-note {
+  font-size: 0.6875rem;
+  color: #5a7566;
   font-weight: 500;
-  color: #374151;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------- */
+/* Roles & Status Tags                                 */
+/* ---------------------------------------------------- */
+.mm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+
+.mm-tag--green {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.mm-tag--gold {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.12);
+}
+
+.mm-tag--amber {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.mm-tag--gray,
+.mm-tag--neutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* ---------------------------------------------------- */
+/* Dropdown Body & Menu Items                          */
+/* ---------------------------------------------------- */
+.mm-bridgekey-menu__body {
+  padding: 0.45rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.mm-bridgekey-menu__section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  margin: 0.35rem 0.5rem 0.2rem;
+}
+
+.mm-bridgekey-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
   text-decoration: none;
+  color: #1e293b;
+  font-size: 0.8125rem;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
+  font-family: inherit;
 }
 
-.mm-dropdown__item:hover {
-  background: #f3f4f6;
-  color: #111827;
+.mm-bridgekey-menu__item:hover:not(:disabled) {
+  background: #f2f8f4;
+  border-color: #dcece1;
+  transform: translateX(2px);
 }
 
-.mm-dropdown__item--faucet {
-  color: #ea580c;
+.mm-bridgekey-menu__item:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-.mm-dropdown__item--faucet:hover {
+.mm-bridgekey-menu__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.mm-bridgekey-menu__item:hover .mm-bridgekey-menu__item-icon {
+  transform: scale(1.05);
+}
+
+.mm-bridgekey-menu__item-icon--faucet {
   background: #fff7ed;
-  color: #c2410c;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
 }
 
-.mm-dropdown__item--danger {
+.mm-bridgekey-menu__item-icon--explorer {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+.mm-bridgekey-menu__item-icon--role {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.mm-bridgekey-menu__item-icon--refresh {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.mm-bridgekey-menu__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.mm-bridgekey-menu__item-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mm-bridgekey-menu__item-sub {
+  font-size: 0.6875rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mm-bridgekey-menu__item-ext {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.mm-bridgekey-menu__item:hover .mm-bridgekey-menu__item-ext {
+  color: var(--color-agricultural-green, #3f7650);
+  transform: translateX(2px);
+}
+
+/* Network Mismatch Warning Banner */
+.mm-bridgekey-menu__mismatch-banner {
+  margin: 0.35rem 0.25rem 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 0.775rem;
+}
+
+.mm-bridgekey-menu__mismatch-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.mm-bridgekey-menu__mismatch-title {
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  font-size: 0.775rem;
+}
+
+.mm-bridgekey-menu__mismatch-desc {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.72rem;
+  color: #78350f;
+  line-height: 1.35;
+}
+
+.mm-bridgekey-menu__switch-btn {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mm-bridgekey-menu__switch-btn:hover {
+  background: #b45309;
+}
+
+/* ---------------------------------------------------- */
+/* Dropdown Footer & Disconnect Button                 */
+/* ---------------------------------------------------- */
+.mm-bridgekey-menu__foot {
+  padding: 0.5rem 0.65rem;
+  background: #fbfdfc;
+  border-top: 1px solid var(--color-borders, #e8efe9);
+}
+
+.mm-bridgekey-menu__disconnect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #ffffff;
   color: #dc2626;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
-.mm-dropdown__item--danger:hover {
-  background: #fef2f2;
+.mm-bridgekey-menu__disconnect:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
   color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
 }
 
-.mm-item-arrow {
-  margin-left: auto;
-  opacity: 0.5;
+/* ---------------------------------------------------- */
+/* Utilities & Animations                              */
+/* ---------------------------------------------------- */
+@keyframes mm-spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.mm-dropdown__divider {
-  height: 1px;
-  background: #f3f4f6;
-  margin: 0.35rem 0;
+.mm-spin {
+  animation: mm-spin 0.75s linear infinite;
 }
 
-/* Modal */
+/* ---------------------------------------------------- */
+/* Backward Compatibility & Modals                     */
+/* ---------------------------------------------------- */
+.mm-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+}
+
 .mm-modal-overlay {
   position: fixed;
   inset: 0;
@@ -328,10 +647,10 @@
   padding: 1.5rem;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
   border: 1px solid #e5e7eb;
-  animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mm-modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes modal-pop {
+@keyframes mm-modal-pop {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -431,20 +750,6 @@
   margin: 0.2rem 0 0 0;
   font-size: 0.75rem;
   color: #6b7280;
-}
-
-.mm-tag {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.mm-tag--gold {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
 }
 
 .mm-wallet-option__arrow {

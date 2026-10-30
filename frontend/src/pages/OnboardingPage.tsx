@@ -11,7 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { useWeb3Wallet } from "../providers/Web3WalletContext";
 import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
-import { getRoleForWallet, type MandiMintRole } from "../auth/roles";
+import { getRoleForWallet, setRoleForWallet, type MandiMintRole } from "../auth/roles";
 import { truncateAddress } from "../lib/format";
 import "./onboarding.css";
 
@@ -36,7 +36,9 @@ export function OnboardingPage() {
 
     setIsSubmitting(true);
     try {
-      // Save role bound to this wallet
+      // 1. Save role explicitly bound to active wallet address
+      setRoleForWallet(activeAddress, selectedRole);
+      // 2. Update local role via authoritative role hook
       selectLocalRole(selectedRole);
 
       // Route to role-specific dashboard

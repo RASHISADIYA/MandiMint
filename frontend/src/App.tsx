@@ -21,7 +21,7 @@ function AppIndexRedirect() {
   const { connected, address, isConnecting } = useWeb3Wallet();
   const { role } = useAuthoritativeRole(connected);
 
-  if (isConnecting) {
+  if (isConnecting && (!connected || !address)) {
     return (
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
         <p style={{ color: "var(--color-secondary-text)" }}>Connecting wallet…</p>

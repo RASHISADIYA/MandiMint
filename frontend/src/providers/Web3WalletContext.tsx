@@ -654,9 +654,7 @@ export function Web3WalletProvider({ children }: { children: ReactNode }) {
           setError(message);
         }
       } finally {
-        if (authRequestIdRef.current === currentReqId) {
-          setIsConnecting(false);
-        }
+        setIsConnecting(false);
       }
     },
     [detachListeners, selectedNetworkConfig],
@@ -665,6 +663,7 @@ export function Web3WalletProvider({ children }: { children: ReactNode }) {
   const handlePrivyLogout = useCallback(() => {
     if (walletType === "privy") {
       authRequestIdRef.current += 1;
+      setIsConnecting(false);
       detachListeners();
       activeEmbeddedWalletRef.current = null;
       setAddress(null);
@@ -682,6 +681,7 @@ export function Web3WalletProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(() => {
     authRequestIdRef.current += 1;
+    setIsConnecting(false);
     detachListeners();
     activeEmbeddedWalletRef.current = null;
     setAddress(null);

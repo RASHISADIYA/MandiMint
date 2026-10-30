@@ -1,8 +1,11 @@
 import {
   AlertTriangle,
+  Check,
   ClipboardPlus,
+  Copy,
   Flame,
   PlusCircle,
+  RefreshCw,
   Search,
   ShieldCheck,
   UserCheck,
@@ -28,10 +31,30 @@ export function ManagerDashboardPage() {
     selectedNetworkConfig,
     isContractConfigured,
     switchToMstTestnet,
+    refreshState,
   } = useWeb3Wallet();
 
   const [lookupId, setLookupId] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [isRechecking, setIsRechecking] = useState(false);
+
+  const handleCopyAddress = useCallback(() => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  }, [address]);
+
+  const handleRefreshAuth = useCallback(async () => {
+    setIsRechecking(true);
+    try {
+      await refreshState();
+    } finally {
+      setTimeout(() => setIsRechecking(false), 700);
+    }
+  }, [refreshState]);
 
   const handleLookup = useCallback(
     (e: FormEvent) => {
@@ -187,7 +210,21 @@ export function ManagerDashboardPage() {
           <dl className="mm-details-list" style={{ margin: "1.25rem 0", background: "var(--color-background)", padding: "1rem", borderRadius: "var(--radius-md)" }}>
             <div>
               <dt>Connected Wallet</dt>
-              <dd><code>{address || "Not connected"}</code></dd>
+              <dd style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                <code>{address || "Not connected"}</code>
+                {address && (
+                  <button
+                    type="button"
+                    onClick={handleCopyAddress}
+                    className="mm-btn mm-btn--ghost"
+                    style={{ padding: "0.2rem 0.55rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                    title="Copy full wallet address"
+                  >
+                    {copiedAddress ? <Check size={12} style={{ color: "var(--color-success)" }} /> : <Copy size={12} />}
+                    <span>{copiedAddress ? "Copied" : "Copy Address"}</span>
+                  </button>
+                )}
+              </dd>
             </div>
             <div>
               <dt>MandiMint Contract</dt>
@@ -213,7 +250,17 @@ export function ManagerDashboardPage() {
           </dl>
 
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1.5rem" }}>
-            <Link to="/app/batches" className="mm-btn mm-btn--primary">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleRefreshAuth}
+              disabled={isRechecking}
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+            >
+              <RefreshCw size={14} className={isRechecking ? "mm-spin" : ""} />
+              <span>{isRechecking ? "Checking Authorization…" : "Check Authorization Again"}</span>
+            </Button>
+            <Link to="/app/batches" className="mm-btn mm-btn--outline">
               <Search size={15} /> Browse Public Batches
             </Link>
             <Link to="/onboarding" className="mm-btn mm-btn--outline">

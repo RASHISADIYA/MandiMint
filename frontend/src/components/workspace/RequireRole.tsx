@@ -16,18 +16,21 @@ export function RequireRole({ allowedRole, requireOnChainManager = false }: Requ
   const { connected, address, isManager, isOwner, isConnecting } = useWeb3Wallet();
   const { role } = useAuthoritativeRole(connected);
 
-  // 1. If currently connecting, show loading state
-  if (isConnecting) {
+  // 1. If currently connecting AND no wallet is connected yet, show loading state
+  if (isConnecting && (!connected || !address)) {
     return (
       <div className="mm-route-status mm-container" style={{ padding: "4rem 2rem", textAlign: "center" }}>
         <StatusBadge variant="pending">Connecting wallet…</StatusBadge>
+        <p style={{ marginTop: "0.75rem", color: "var(--color-secondary-text)", fontSize: "0.85rem" }}>
+          Connecting your wallet on this device…
+        </p>
       </div>
     );
   }
 
-  // 2. Unauthenticated: Redirect to landing/login
+  // 2. Unauthenticated: Redirect to auth
   if (!connected || !address) {
-    return <Navigate to="/" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   }
 
   // 3. User connected but has not completed role selection: Redirect to onboarding

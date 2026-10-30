@@ -1,16 +1,19 @@
 import {
   Check,
   ChevronDown,
+  ChevronRight,
   Copy,
   ExternalLink,
   Flame,
   Globe,
   LogOut,
   RefreshCw,
+  ShieldCheck,
+  Sparkles,
   UserCheck,
   Wallet,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWeb3Wallet } from "../../providers/Web3WalletContext";
 import { useAuthoritativeRole } from "../../hooks/useAuthoritativeRole";
@@ -28,6 +31,8 @@ export function ConnectWalletButton({
   variant = "primary",
 }: ConnectWalletButtonProps) {
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const {
     connected,
     address,
@@ -48,6 +53,31 @@ export function ConnectWalletButton({
   const { role } = useAuthoritativeRole(connected);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Close dropdown on outside click or escape key
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   const handleCopy = useCallback(() => {
     if (address) {
@@ -56,6 +86,16 @@ export function ConnectWalletButton({
       setTimeout(() => setCopied(false), 2000);
     }
   }, [address]);
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refreshState();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 600);
+    }
+  }, [isRefreshing, refreshState]);
 
   const handleDisconnect = useCallback(() => {
     setMenuOpen(false);
@@ -81,9 +121,9 @@ export function ConnectWalletButton({
   }
 
   return (
-    <div className={`mm-bridgekey-user ${className}`}>
+    <div ref={dropdownRef} className={`mm-bridgekey-user ${className}`}>
       {/* Network & Balance Pill */}
-      <div className="mm-bridgekey-pill">
+      <div className="mm-bridgekey-pill" title={`Network: ${networkName || selectedNetworkConfig.name}`}>
         <span
           className={`mm-status-dot ${
             isCorrectNetwork ? "mm-status-dot--green" : "mm-status-dot--amber"
@@ -91,7 +131,7 @@ export function ConnectWalletButton({
           aria-hidden="true"
         />
         <span className="mm-bridgekey-pill__network">
-          {networkName || (isCorrectNetwork ? "MST Testnet" : "Wrong Network")}
+          {networkName || (isCorrectNetwork ? selectedNetworkConfig.name : "Wrong Network")}
         </span>
         {balance !== null && (
           <span className="mm-bridgekey-pill__balance">
@@ -100,68 +140,101 @@ export function ConnectWalletButton({
         )}
       </div>
 
-      {/* Account Button */}
+      {/* Account Trigger Button */}
       <button
         type="button"
-        className="mm-bridgekey-btn mm-bridgekey-btn--active"
+        className={`mm-bridgekey-btn mm-bridgekey-btn--active ${
+          menuOpen ? "mm-bridgekey-btn--open" : ""
+        }`}
         onClick={() => setMenuOpen((o) => !o)}
         aria-expanded={menuOpen}
         aria-haspopup="true"
+        title="Connected account details and shortcuts"
       >
-        <Wallet size={15} style={{ color: "var(--color-primary)" }} />
+        <span className="mm-bridgekey-btn__icon-wrap">
+          <Wallet size={15} />
+        </span>
         <span className="mm-bridgekey-btn__addr">
           {truncateAddress(address!, 6, 4)}
         </span>
         {role && (
-          <span
-            style={{
-              fontSize: "0.7rem",
-              background: "var(--color-soft-sage)",
-              color: "var(--color-deep-forest)",
-              padding: "0.1rem 0.4rem",
-              borderRadius: "4px",
-              fontWeight: 600,
-            }}
-          >
+          <span className="mm-bridgekey-btn__role">
             {ROLE_LABELS[role]}
           </span>
         )}
         <ChevronDown
           size={14}
-          className={`mm-bridgekey-btn__chevron ${menuOpen ? "mm-bridgekey-btn__chevron--open" : ""}`}
+          className={`mm-bridgekey-btn__chevron ${
+            menuOpen ? "mm-bridgekey-btn__chevron--open" : ""
+          }`}
           aria-hidden="true"
         />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu Popover */}
       {menuOpen && (
         <div
           className="mm-bridgekey-menu"
           role="menu"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Header Summary */}
           <div className="mm-bridgekey-menu__head">
-            <p className="mm-bridgekey-menu__label">Connected Account</p>
-            <div className="mm-bridgekey-menu__address-row">
-              <code className="mm-bridgekey-menu__code" title={address!}>
-                {truncateAddress(address!, 8, 6)}
-              </code>
+            <div className="mm-bridgekey-menu__head-top">
+              <div className="mm-bridgekey-menu__status-label">
+                <span
+                  className={`mm-status-dot ${
+                    isCorrectNetwork ? "mm-status-dot--green" : "mm-status-dot--amber"
+                  }`}
+                  aria-hidden="true"
+                />
+                <span className="mm-bridgekey-menu__label">Connected Account</span>
+              </div>
+              <span className="mm-bridgekey-menu__net-chip">
+                {networkName || (isCorrectNetwork ? selectedNetworkConfig.name : "Unknown Chain")}
+              </span>
+            </div>
+
+            {/* Address Row Card with 1-Click Copy */}
+            <div className="mm-bridgekey-menu__address-card">
+              <div className="mm-bridgekey-menu__address-info">
+                <code className="mm-bridgekey-menu__code" title={address!}>
+                  {truncateAddress(address!, 8, 6)}
+                </code>
+                {balance !== null && (
+                  <span className="mm-bridgekey-menu__balance-text">
+                    {balance} {isTestnet ? "tMSTC" : "MSTC"}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
-                className="mm-bridgekey-menu__action-icon"
+                className={`mm-bridgekey-menu__action-icon ${
+                  copied ? "mm-bridgekey-menu__action-icon--copied" : ""
+                }`}
                 onClick={handleCopy}
-                title="Copy full address"
+                title={copied ? "Copied to clipboard!" : "Copy full address"}
+                aria-label="Copy address"
               >
-                {copied ? <Check size={14} style={{ color: "var(--color-success)" }} /> : <Copy size={14} />}
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                <span className="mm-bridgekey-menu__copy-text">
+                  {copied ? "Copied" : "Copy"}
+                </span>
               </button>
             </div>
 
             {/* Role & Privileges Badge */}
-            <div style={{ marginTop: "0.5rem" }}>
+            <div className="mm-bridgekey-menu__role-row">
               {isOwner ? (
-                <span className="mm-tag mm-tag--gold">Contract Owner</span>
+                <span className="mm-tag mm-tag--gold">
+                  <Sparkles size={11} aria-hidden="true" />
+                  <span>Contract Owner</span>
+                </span>
               ) : isManager ? (
-                <span className="mm-tag mm-tag--green">Authorized Manager</span>
+                <span className="mm-tag mm-tag--green">
+                  <ShieldCheck size={11} aria-hidden="true" />
+                  <span>Authorized Manager</span>
+                </span>
               ) : role === "farmer" ? (
                 <span className="mm-tag mm-tag--green">Farmer Workspace</span>
               ) : role === "fpo_admin" ? (
@@ -169,38 +242,32 @@ export function ConnectWalletButton({
               ) : (
                 <span className="mm-tag mm-tag--gray">Role Not Selected</span>
               )}
+              <span className="mm-bridgekey-menu__chain-note">MST Blockchain</span>
             </div>
           </div>
 
           <div className="mm-bridgekey-menu__body">
-            {/* Wrong Network / Network Mismatch Warning */}
+            {/* Wrong Network / Network Mismatch Warning Banner */}
             {isNetworkMismatch && (
-              <div
-                style={{
-                  padding: "0.6rem 0.8rem",
-                  margin: "0.5rem",
-                  background: "var(--color-warning-bg)",
-                  border: "1px solid var(--color-warning)",
-                  borderRadius: "6px",
-                  fontSize: "0.8rem",
-                }}
-              >
-                <p style={{ margin: "0 0 0.4rem 0", fontWeight: 600, color: "var(--color-warning)" }}>
-                  ⚠️ Network Mismatch
-                </p>
-                <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  MandiMint is set to {selectedNetworkConfig.name}, but your wallet is on another chain.
+              <div className="mm-bridgekey-menu__mismatch-banner">
+                <div className="mm-bridgekey-menu__mismatch-head">
+                  <span aria-hidden="true">⚠️</span>
+                  <p className="mm-bridgekey-menu__mismatch-title">Network Mismatch</p>
+                </div>
+                <p className="mm-bridgekey-menu__mismatch-desc">
+                  MandiMint is configured for <strong>{selectedNetworkConfig.name}</strong>, but your wallet is connected to another network.
                 </p>
                 <button
                   type="button"
-                  className="mm-btn mm-btn--primary"
+                  className="mm-bridgekey-menu__switch-btn"
                   onClick={switchWalletToSelectedNetwork}
-                  style={{ width: "100%", fontSize: "0.75rem", padding: "0.3rem" }}
                 >
                   Switch Wallet to {selectedNetworkConfig.name}
                 </button>
               </div>
             )}
+
+            <p className="mm-bridgekey-menu__section-title">Workspace & Actions</p>
 
             {/* Faucet Link */}
             {isTestnet && selectedNetworkConfig.faucetUrl && (
@@ -208,12 +275,18 @@ export function ConnectWalletButton({
                 href={selectedNetworkConfig.faucetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mm-bridgekey-menu__item"
+                className="mm-bridgekey-menu__item mm-bridgekey-menu__item--faucet"
                 role="menuitem"
+                onClick={() => setMenuOpen(false)}
               >
-                <Flame size={15} style={{ color: "var(--color-warning)" }} />
-                <span>Claim Free tMSTC</span>
-                <ExternalLink size={12} style={{ marginLeft: "auto", opacity: 0.6 }} />
+                <span className="mm-bridgekey-menu__item-icon mm-bridgekey-menu__item-icon--faucet">
+                  <Flame size={15} />
+                </span>
+                <div className="mm-bridgekey-menu__item-text">
+                  <span className="mm-bridgekey-menu__item-label">Claim Free tMSTC</span>
+                  <span className="mm-bridgekey-menu__item-sub">Testnet faucet for gas</span>
+                </div>
+                <ExternalLink size={13} className="mm-bridgekey-menu__item-ext" aria-hidden="true" />
               </a>
             )}
 
@@ -224,10 +297,20 @@ export function ConnectWalletButton({
               rel="noopener noreferrer"
               className="mm-bridgekey-menu__item"
               role="menuitem"
+              onClick={() => setMenuOpen(false)}
             >
-              <Globe size={15} />
-              <span>View on {selectedNetworkConfig.name} Explorer</span>
-              <ExternalLink size={12} style={{ marginLeft: "auto", opacity: 0.6 }} />
+              <span className="mm-bridgekey-menu__item-icon mm-bridgekey-menu__item-icon--explorer">
+                <Globe size={15} />
+              </span>
+              <div className="mm-bridgekey-menu__item-text">
+                <span className="mm-bridgekey-menu__item-label">
+                  View on {selectedNetworkConfig.name} Explorer
+                </span>
+                <span className="mm-bridgekey-menu__item-sub">
+                  Verify transactions on-chain
+                </span>
+              </div>
+              <ExternalLink size={13} className="mm-bridgekey-menu__item-ext" aria-hidden="true" />
             </a>
 
             {/* Switch Role link */}
@@ -237,24 +320,37 @@ export function ConnectWalletButton({
               role="menuitem"
               onClick={() => setMenuOpen(false)}
             >
-              <UserCheck size={15} />
-              <span>Switch Workspace Role</span>
+              <span className="mm-bridgekey-menu__item-icon mm-bridgekey-menu__item-icon--role">
+                <UserCheck size={15} />
+              </span>
+              <div className="mm-bridgekey-menu__item-text">
+                <span className="mm-bridgekey-menu__item-label">Switch Workspace Role</span>
+                <span className="mm-bridgekey-menu__item-sub">Farmer / Manager mode</span>
+              </div>
+              <ChevronRight size={14} className="mm-bridgekey-menu__item-ext" aria-hidden="true" />
             </Link>
 
             {/* Refresh State */}
             <button
               type="button"
               className="mm-bridgekey-menu__item"
-              onClick={async () => {
-                await refreshState();
-              }}
+              onClick={handleRefresh}
               role="menuitem"
+              disabled={isRefreshing}
             >
-              <RefreshCw size={15} />
-              <span>Refresh Balance</span>
+              <span className="mm-bridgekey-menu__item-icon mm-bridgekey-menu__item-icon--refresh">
+                <RefreshCw size={15} className={isRefreshing ? "mm-spin" : ""} />
+              </span>
+              <div className="mm-bridgekey-menu__item-text">
+                <span className="mm-bridgekey-menu__item-label">
+                  {isRefreshing ? "Refreshing Balance…" : "Refresh Balance"}
+                </span>
+                <span className="mm-bridgekey-menu__item-sub">Sync latest on-chain state</span>
+              </div>
             </button>
           </div>
 
+          {/* Footer with Disconnect */}
           <div className="mm-bridgekey-menu__foot">
             <button
               type="button"
