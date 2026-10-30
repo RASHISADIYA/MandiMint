@@ -39,7 +39,8 @@ Copy `.env.example` to `.env.local`. Every `VITE_*` value is public in the clien
 | `VITE_MST_TESTNET_CURRENCY_SYMBOL` | Optional | Defaults to `tMSTC` |
 | `VITE_MST_TESTNET_CURRENCY_NAME` | Optional | Defaults to `MST Testnet` |
 | `VITE_MST_TESTNET_CURRENCY_DECIMALS` | Optional | Defaults to `18` |
-| `VITE_MANDIMINT_API_BASE_URL` | Optional | Enables backend-authoritative roles; without it, the app offers a clearly labelled local role || `VITE_MANDIMINT_CONTRACT_ADDRESS` | Yes for chain data | Deployed MandiMint contract address |
+| `VITE_MANDIMINT_API_BASE_URL` | Optional | Enables backend-authoritative roles; without it, the app offers a clearly labelled local role |
+| `VITE_MANDIMINT_CONTRACT_ADDRESS` | Yes for chain data | Deployed MandiMint contract address |
 
 The app does not fall back to a mock network, mock contract, or mock wallet. Missing role API configuration enables an explicit local role preference, not a server-verified role. Missing MST/contract configuration disables the dependent feature and shows an explicit notice.
 
