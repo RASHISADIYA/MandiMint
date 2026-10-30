@@ -472,7 +472,7 @@ export function ManagerDashboardPage() {
             <form onSubmit={handleLookup} style={{ display: "flex", gap: "0.5rem" }}>
               <input
                 type="text"
-                placeholder="e.g. 101"
+                placeholder="e.g. 1"
                 value={lookupId}
                 onChange={(e) => setLookupId(e.target.value)}
                 style={{

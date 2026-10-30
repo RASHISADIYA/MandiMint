@@ -17,35 +17,20 @@ import {
 import verifiedBatchesData from "../../config/verifiedBatches.json";
 
 describe("Honest Batch Data & Simulation Removal Audit", () => {
-  it("never includes genuine transaction hashes or explorer URLs in sample batches", () => {
+  it("strictly decommissions offline sample batches and returns empty array", () => {
     const samples = getSampleBatches();
-    expect(samples.length).toBeGreaterThan(0);
-
-    for (const sample of samples) {
-      expect(sample.isSample).toBe(true);
-      expect(sample.status).toBe("illustrative_sample");
-      expect(sample.txHash).toBeNull();
-      expect(sample.contractAddress).toBeNull();
-      expect(sample.explorerUrl).toBeNull();
-    }
+    expect(samples).toEqual([]);
   });
 
-  it("ensures verifiedBatches.json explicitly flags mock records as illustrative samples", () => {
-    for (const record of verifiedBatchesData) {
-      expect(record.isSample).toBe(true);
-      expect(record.status).toBe("illustrative_sample");
-      expect(record.txHash).toBeNull();
-      expect(record.contractAddress).toBeNull();
-      expect(record.explorerUrl).toBeNull();
-    }
+  it("ensures verifiedBatches.json contains no hardcoded mock records", () => {
+    expect(verifiedBatchesData).toEqual([]);
   });
 
-  it("returns null explorer link for illustrative sample batches", () => {
-    const samples = getSampleBatches();
-    for (const sample of samples) {
-      const url = getExplorerTransactionUrl(sample.txHash, "mstTestnet");
-      expect(url).toBeNull();
-    }
+  it("strictly separates networks and never returns mock data", () => {
+    const testnetBatches = getVerifiedBatches("mstTestnet");
+    const mainnetBatches = getVerifiedBatches("mstMainnet");
+    expect(testnetBatches).toEqual([]);
+    expect(mainnetBatches).toEqual([]);
   });
 
   it("returns real explorer link only when a genuine txHash is present on a recorded batch", () => {

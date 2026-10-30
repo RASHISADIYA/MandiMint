@@ -91,7 +91,7 @@ describe("Network Separation and Fail-Closed Validation", () => {
     const testnetBatches = getVerifiedBatches("mstTestnet");
     const mainnetBatches = getVerifiedBatches("mstMainnet");
 
-    expect(testnetBatches.length).toBeGreaterThan(0);
+    expect(testnetBatches).toEqual([]);
     expect(mainnetBatches).toEqual([]); // Mainnet is clean and isolated
   });
 

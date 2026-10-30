@@ -13,10 +13,7 @@ import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useFarmerHistory } from "../../hooks/useMandiMintReads";
 import { useWalletOnboarding } from "../../hooks/useWalletOnboarding";
 import { useWeb3Wallet } from "../../providers/Web3WalletContext";
-import {
-  getRecordedBatches,
-  getSampleBatches,
-} from "../../lib/blockchain/mandiMintContract";
+import { getRecordedBatches } from "../../lib/blockchain/mandiMintContract";
 import {
   formatQuantityKg,
   parseAddress,
@@ -68,28 +65,6 @@ export function FarmerHistoryPage() {
     () => getRecordedBatches(web3.selectedNetwork),
     [web3.selectedNetwork],
   );
-  const sampleBatches = useMemo(() => getSampleBatches(), []);
-
-  // Illustrative samples matching this address (offline demonstration only)
-  const sampleMatches = useMemo(() => {
-    if (!queriedAddress) return [];
-    const lower = queriedAddress.toLowerCase();
-    return sampleBatches
-      .filter((b) =>
-        b.farmers.some((f) => f.address.toLowerCase() === lower),
-      )
-      .map((b) => {
-        const match = b.farmers.find(
-          (f) => f.address.toLowerCase() === lower,
-        );
-        return {
-          batchId: b.batchId,
-          cropName: b.cropName,
-          mandiName: b.mandiName,
-          quantityKg: match?.quantityKg ?? 0,
-        };
-      });
-  }, [queriedAddress, sampleBatches]);
 
   // Live on-chain allocations from MandiMint smart contract
   const onChainRows = useMemo(() => {
@@ -260,68 +235,6 @@ export function FarmerHistoryPage() {
                 </div>
               )}
             </>
-          )}
-
-          {sampleMatches.length > 0 && (
-            <div
-              style={{
-                marginTop: "1.5rem",
-                padding: "1rem",
-                background: "#f9fafb",
-                border: "1px dashed #d1d5db",
-                borderRadius: "8px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    color: "#4b5563",
-                  }}
-                >
-                  Illustrative Sample Data Reference (Offline Demonstration)
-                </span>
-                <span className="mm-tag mm-tag--neutral">Sample Only</span>
-              </div>
-              <p
-                style={{
-                  fontSize: "0.8rem",
-                  color: "#6b7280",
-                  margin: "0 0 0.75rem 0",
-                }}
-              >
-                This address matches an offline mock record in the MandiMint demonstration suite.
-                Sample records are not on-chain transactions and do not exist on {web3.selectedNetworkConfig.name}.
-              </p>
-              <div style={{ fontSize: "0.8rem", color: "#374151" }}>
-                {sampleMatches.map((sm) => (
-                  <div
-                    key={sm.batchId}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "0.25rem 0",
-                      borderTop: "1px solid #f3f4f6",
-                    }}
-                  >
-                    <span>
-                      Sample #{sm.batchId} — {sm.cropName} ({sm.mandiName})
-                    </span>
-                    <span style={{ fontWeight: 600 }}>
-                      {formatQuantityKg(BigInt(sm.quantityKg))}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
         </section>
       )}

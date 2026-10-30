@@ -10,10 +10,7 @@ import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { SkeletonCard } from "../../components/ui/LoadingSkeleton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useBatchDetails } from "../../hooks/useMandiMintReads";
-import {
-  getRecordedBatches,
-  getSampleBatches,
-} from "../../lib/blockchain/mandiMintContract";
+import { getRecordedBatches } from "../../lib/blockchain/mandiMintContract";
 import { getExplorerAddressUrl, getExplorerTxUrl } from "../../config/networks";
 import { getCropById } from "../../lib/blockchain/crops";
 import {
@@ -34,52 +31,13 @@ export function BatchDetailsPage() {
   const web3 = useWeb3Wallet();
   const details = useBatchDetails(validId, web3.selectedNetwork);
 
-  // Check if this batch exists in locally recorded on-chain transactions for this network
+  // Retrieve any supplementary off-chain metadata (e.g. txHash, mandi notes) recorded during client submission
   const recordedMatch = useMemo(() => {
     if (!validId) return null;
     const numId = Number(validId);
     const recorded = getRecordedBatches(web3.selectedNetwork);
     return recorded.find((b) => b.batchId === numId) ?? null;
   }, [validId, web3.selectedNetwork]);
-
-  // Check if this batch is an illustrative sample batch
-  const sampleMatch = useMemo(() => {
-    if (!validId) return null;
-    const numId = Number(validId);
-    const samples = getSampleBatches();
-    return samples.find((b) => b.batchId === numId) ?? null;
-  }, [validId]);
-
-  // Determine active data and whether it is a sample or genuinely on-chain
-  const isOnChain = details.status === "success" && details.data !== null;
-  const isSampleData = !isOnChain && Boolean(sampleMatch);
-
-  const activeData = useMemo(() => {
-    if (isOnChain && details.data) {
-      return {
-        ...details.data,
-        txHash: recordedMatch?.txHash ?? null,
-        isSample: false,
-      };
-    }
-    if (sampleMatch) {
-      return {
-        batchId: BigInt(sampleMatch.batchId),
-        cropId: BigInt(sampleMatch.cropId),
-        totalQuantityKg: BigInt(sampleMatch.totalQuantityKg),
-        salePriceInrPerTonne: BigInt(sampleMatch.salePriceInrPerTonne),
-        manager: sampleMatch.manager,
-        createdAt: BigInt(sampleMatch.createdAt),
-        txHash: null,
-        isSample: true,
-        allocations: sampleMatch.farmers.map((f) => ({
-          farmer: f.address,
-          quantityKg: BigInt(f.quantityKg),
-        })),
-      };
-    }
-    return null;
-  }, [isOnChain, details.data, recordedMatch, sampleMatch]);
 
   if (!validId) {
     return (
@@ -103,7 +61,9 @@ export function BatchDetailsPage() {
     );
   }
 
+  const activeData = details.data;
   const crop = activeData ? getCropById(activeData.cropId) : null;
+  const txHash = recordedMatch?.txHash ?? null;
 
   return (
     <div className="mm-page">
@@ -114,17 +74,19 @@ export function BatchDetailsPage() {
               style={{
                 fontSize: "0.75rem",
                 fontWeight: 700,
-                background: isSampleData ? "#f1f5f9" : "#ecfdf5",
-                color: isSampleData ? "#475569" : "#065f46",
+                background: "#ecfdf5",
+                color: "#065f46",
                 padding: "0.2rem 0.5rem",
                 borderRadius: "9999px",
               }}
             >
-              {isSampleData ? `Sample #${validId.toString()}` : `Batch #${validId.toString()}`}
+              Batch #{validId.toString()}
             </span>
-            <StatusBadge variant={isSampleData ? "neutral" : "success"}>
-              {isSampleData ? "Illustrative Sample (Offline)" : `Verified On ${web3.selectedNetworkConfig.name}`}
-            </StatusBadge>
+            {details.status === "success" && (
+              <StatusBadge variant="success">
+                Verified On {web3.selectedNetworkConfig.name}
+              </StatusBadge>
+            )}
           </div>
           <h1 className="mm-page-head__title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span>{crop ? crop.emoji : "🌾"}</span>
@@ -136,9 +98,7 @@ export function BatchDetailsPage() {
             )}
           </h1>
           <p className="mm-page-head__lead">
-            {isSampleData
-              ? `Illustrative sample record demonstrating commodity data structures and whole-kg conservation. This batch is not committed to the ${web3.selectedNetworkConfig.name} blockchain.`
-              : `Tamper-evident crop record stored on ${web3.selectedNetworkConfig.name}. All quantities and farmer allocations are cryptographically verified.`}
+            Tamper-evident crop record stored on {web3.selectedNetworkConfig.name}. All quantities and farmer allocations are cryptographically verified by the smart contract.
           </p>
         </div>
         <Link to="/app/batches" className="mm-outline-link">
@@ -146,39 +106,19 @@ export function BatchDetailsPage() {
         </Link>
       </header>
 
-      {/* Illustrative Sample Notice */}
-      {isSampleData && (
-        <div
-          style={{
-            margin: "0 0 1.5rem 0",
-            padding: "1rem 1.25rem",
-            background: "#fffbeb",
-            border: "1px solid #fef3c7",
-            borderRadius: "8px",
-            fontSize: "0.85rem",
-            color: "#92400e",
-            display: "flex",
-            gap: "0.75rem",
-            alignItems: "flex-start",
-          }}
-        >
-          <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>ℹ️</span>
-          <div>
-            <strong>Illustrative Sample Record:</strong> Batch #{validId.toString()} is demonstration sample data used to illustrate crop attributes and farmer distribution calculations. It has not been signed or broadcast to the {web3.selectedNetworkConfig.name} blockchain. No on-chain transaction hash, block confirmation, or explorer verification exists for this record.
-          </div>
-        </div>
-      )}
+      {/* Loading State */}
+      {details.status === "loading" && <SkeletonCard />}
 
-      {details.status === "loading" && !activeData && <SkeletonCard />}
-
-      {details.status === "error" && !activeData && (
+      {/* Error State */}
+      {details.status === "error" && (
         <ErrorBanner
           message={details.error ?? `No batch was found with ID #${validId.toString()} on ${web3.selectedNetworkConfig.name}.`}
           onRetry={details.reload}
         />
       )}
 
-      {activeData && (
+      {/* Successfully Retrieved On-Chain Batch Data */}
+      {details.status === "success" && activeData && (
         <>
           {/* Top Metrics Cards */}
           <div className="mm-stat-grid">
@@ -216,11 +156,9 @@ export function BatchDetailsPage() {
             <section className="mm-panel" aria-labelledby="batch-meta-title">
               <div className="mm-panel__head">
                 <div>
-                  <p className="mm-panel__eyebrow">
-                    {isSampleData ? "Data Specifications" : "Cryptographic Record"}
-                  </p>
+                  <p className="mm-panel__eyebrow">Cryptographic Record</p>
                   <h2 id="batch-meta-title" className="mm-panel__title">
-                    {isSampleData ? "Sample Metadata" : "On-Chain Metadata"}
+                    On-Chain Metadata
                   </h2>
                 </div>
                 <ShieldCheck className="mm-panel__icon" />
@@ -236,15 +174,13 @@ export function BatchDetailsPage() {
                 <div>
                   <dt>Record Status</dt>
                   <dd>
-                    {isSampleData ? (
-                      <span className="mm-tag mm-tag--neutral">Illustrative Sample (Offline)</span>
-                    ) : (
-                      <span className="mm-tag mm-tag--green">On-Chain Verified ({web3.selectedNetworkConfig.name})</span>
-                    )}
+                    <span className="mm-tag mm-tag--green">
+                      On-Chain Verified ({web3.selectedNetworkConfig.name})
+                    </span>
                   </dd>
                 </div>
                 <div>
-                  <dt>Crop Category</dt>
+                  <dt>Crop Variety</dt>
                   <dd>
                     <span>{crop?.name ?? `Crop #${activeData.cropId.toString()}`}</span>
                   </dd>
@@ -255,30 +191,28 @@ export function BatchDetailsPage() {
                     <code className="mm-address">
                       {truncateAddress(activeData.manager, 8, 6)}
                     </code>
-                    {!isSampleData && (
-                      <a
-                        href={getExplorerAddressUrl(web3.selectedNetwork, activeData.manager)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mm-inline-link"
-                        style={{ marginLeft: "0.5rem" }}
-                      >
-                        {web3.selectedNetworkConfig.name} Explorer <ExternalLink size={12} aria-hidden="true" />
-                      </a>
-                    )}
+                    <a
+                      href={getExplorerAddressUrl(web3.selectedNetwork, activeData.manager)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mm-inline-link"
+                      style={{ marginLeft: "0.5rem" }}
+                    >
+                      {web3.selectedNetworkConfig.name} Explorer <ExternalLink size={12} aria-hidden="true" />
+                    </a>
                   </dd>
                 </div>
-                {activeData.txHash && (
+                {txHash && (
                   <div>
                     <dt>Transaction Hash</dt>
                     <dd>
                       <a
-                        href={getExplorerTxUrl(web3.selectedNetwork, activeData.txHash)}
+                        href={getExplorerTxUrl(web3.selectedNetwork, txHash)}
                         target="_blank"
                         rel="noreferrer"
                         className="mm-inline-link"
                       >
-                        {truncateAddress(activeData.txHash, 10, 8)} <ExternalLink size={12} />
+                        {truncateAddress(txHash, 10, 8)} <ExternalLink size={12} />
                       </a>
                     </dd>
                   </div>
@@ -288,20 +222,16 @@ export function BatchDetailsPage() {
                   <dd>{formatTimestamp(activeData.createdAt)}</dd>
                 </div>
                 <div>
-                  <dt>Contract Verification</dt>
+                  <dt>Smart Contract</dt>
                   <dd>
-                    {isSampleData ? (
-                      <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                        None (Offline Prototype Model)
-                      </span>
-                    ) : web3.selectedNetworkConfig.contractAddress ? (
+                    {web3.selectedNetworkConfig.contractAddress ? (
                       <a
                         href={getExplorerAddressUrl(web3.selectedNetwork, web3.selectedNetworkConfig.contractAddress)}
                         target="_blank"
                         rel="noreferrer"
                         className="mm-inline-link"
                       >
-                        MandiMint Contract on {web3.selectedNetworkConfig.name} <ExternalLink size={12} />
+                        {truncateAddress(web3.selectedNetworkConfig.contractAddress, 8, 6)} <ExternalLink size={12} />
                       </a>
                     ) : (
                       <span style={{ color: "#b45309", fontSize: "0.85rem" }}>
@@ -310,6 +240,17 @@ export function BatchDetailsPage() {
                     )}
                   </dd>
                 </div>
+                {recordedMatch?.mandiName && (
+                  <div>
+                    <dt>Market Location</dt>
+                    <dd>
+                      <span>{recordedMatch.mandiName}</span>
+                      <span style={{ fontSize: "0.7rem", color: "#6b7280", marginLeft: "0.5rem" }}>
+                        (Supplementary Off-Chain Metadata)
+                      </span>
+                    </dd>
+                  </div>
+                )}
               </dl>
 
               <div
@@ -375,20 +316,14 @@ export function BatchDetailsPage() {
                               <code title={allocation.farmer}>
                                 {truncateAddress(allocation.farmer, 6, 4)}
                               </code>
-                              {isSampleData ? (
-                                <span className="mm-tag mm-tag--neutral" style={{ fontSize: "0.65rem", padding: "1px 4px" }}>
-                                  Sample Farmer
-                                </span>
-                              ) : (
-                                <a
-                                  href={getExplorerAddressUrl(web3.selectedNetwork, allocation.farmer)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  title="View on Explorer"
-                                >
-                                  <ExternalLink size={11} style={{ color: "#059669" }} />
-                                </a>
-                              )}
+                              <a
+                                href={getExplorerAddressUrl(web3.selectedNetwork, allocation.farmer)}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="View on Explorer"
+                              >
+                                <ExternalLink size={11} style={{ color: "#059669" }} />
+                              </a>
                             </div>
                           </td>
                           <td style={{ fontWeight: 600 }}>

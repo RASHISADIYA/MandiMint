@@ -14,7 +14,7 @@ import { type NetworkId } from "../../config/networks";
 import { formatQuantityKg } from "../format";
 import { getEmbeddedEthersSigner } from "../ethers/embeddedSigner";
 import { MANDIMINT_ABI } from "./mandiMintAbi";
-import defaultVerifiedBatches from "../../config/verifiedBatches.json";
+import { getCropById } from "./crops";
 
 export type SignerOrWallet = Signer | ConnectedWallet;
 
@@ -380,8 +380,126 @@ export interface VerifiedBatchRecord {
   farmers: Array<{ address: string; quantityKg: number }>;
 }
 
+export const DEPLOYMENT_START_BLOCKS: Record<number, number> = {
+  91562037: 6640665, // Official deployment block of MandiMint on MST Testnet
+};
+
+export async function fetchOnChainBatches(
+  networkId: NetworkId = "mstTestnet",
+): Promise<VerifiedBatchRecord[]> {
+  const config = getMandiMintContractConfig(networkId);
+  if (!config) {
+    return [];
+  }
+
+  const contract = getReadContract(networkId);
+  const startBlock = DEPLOYMENT_START_BLOCKS[config.chain.chainId] ?? 0;
+
+  // Query actual BatchRecorded event logs from the deployed smart contract
+  const filter = contract.filters.BatchRecorded();
+  const eventLogs = await contract.queryFilter(filter, startBlock, "latest");
+
+  // Read client-side local cache to recover supplementary off-chain metadata (e.g. mandiName, exact txHash)
+  const localBatches = getRecordedBatches(networkId);
+  const localBatchMap = new Map<number, VerifiedBatchRecord>();
+  for (const lb of localBatches) {
+    localBatchMap.set(lb.batchId, lb);
+  }
+
+  const results: VerifiedBatchRecord[] = [];
+  const processedBatchIds = new Set<number>();
+
+  for (const log of eventLogs) {
+    try {
+      const parsedLog = "args" in log && log.args ? log.args : null;
+      if (!parsedLog) continue;
+
+      const batchId = Number(parsedLog[0]);
+      const cropId = Number(parsedLog[1]);
+      const manager = String(parsedLog[2]);
+      const totalQuantityKg = Number(parsedLog[3]);
+      const salePriceInrPerTonne = Number(parsedLog[4]);
+      const createdAt = Number(parsedLog[6]);
+      const txHash = log.transactionHash ?? null;
+      const blockNumber = log.blockNumber ?? null;
+
+      processedBatchIds.add(batchId);
+
+      // Fetch verified on-chain farmer allocations directly from contract storage
+      let farmersList: Array<{ address: string; quantityKg: number }> = [];
+      try {
+        const allocResult = await contract.getBatchAllocations(batchId);
+        const addrs = allocResult[0] as string[];
+        const qtys = allocResult[1] as bigint[];
+        farmersList = addrs.map((addr, i) => ({
+          address: addr,
+          quantityKg: Number(qtys[i] ?? 0n),
+        }));
+      } catch {
+        farmersList = [];
+      }
+
+      const localMeta = localBatchMap.get(batchId);
+      const crop = getCropById(cropId);
+
+      results.push({
+        batchId,
+        cropId,
+        cropName: crop.name,
+        mandiName: localMeta?.mandiName ?? "MST Verified Produce Mandi",
+        totalQuantityKg,
+        salePriceInrPerTonne,
+        txHash: txHash || localMeta?.txHash || null,
+        blockNumber,
+        manager,
+        contractAddress: config.address,
+        explorerUrl: getExplorerTransactionUrl(txHash || localMeta?.txHash || null, networkId),
+        status: "confirmed",
+        createdAt,
+        isSample: false,
+        networkId,
+        farmers: farmersList.length > 0 ? farmersList : (localMeta?.farmers ?? []),
+      });
+    } catch {
+      // Continue processing remaining logs
+    }
+  }
+
+  // Also verify any locally tracked client submissions against contract.getBatch()
+  for (const lb of localBatches) {
+    if (processedBatchIds.has(lb.batchId)) continue;
+    try {
+      // Only include if successfully retrieved and verified from the smart contract
+      const onChainBatch = await readBatch(BigInt(lb.batchId), networkId);
+      if (onChainBatch && onChainBatch.batchId > 0n) {
+        processedBatchIds.add(lb.batchId);
+        results.push({
+          ...lb,
+          cropId: Number(onChainBatch.cropId),
+          cropName: getCropById(onChainBatch.cropId).name,
+          totalQuantityKg: Number(onChainBatch.totalQuantityKg),
+          salePriceInrPerTonne: Number(onChainBatch.salePriceInrPerTonne),
+          manager: onChainBatch.manager,
+          createdAt: Number(onChainBatch.createdAt),
+          contractAddress: config.address,
+          status: "confirmed",
+          isSample: false,
+        });
+      }
+    } catch {
+      // Discard records that do not exist on the smart contract
+    }
+  }
+
+  // Sort batches descending by batch ID (newest on-chain batches first)
+  results.sort((a, b) => b.batchId - a.batchId);
+
+  return results;
+}
+
 export function getSampleBatches(): VerifiedBatchRecord[] {
-  return defaultVerifiedBatches as unknown as VerifiedBatchRecord[];
+  // Offline sample batches have been completely removed
+  return [];
 }
 
 export function getRecordedBatches(networkId: NetworkId = "mstTestnet"): VerifiedBatchRecord[] {
@@ -391,19 +509,21 @@ export function getRecordedBatches(networkId: NetworkId = "mstTestnet"): Verifie
   try {
     const storageKey = `mandimint_custom_batches_${networkId}`;
     const raw = window.localStorage.getItem(storageKey);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: VerifiedBatchRecord[] = JSON.parse(raw);
+    // Strictly filter out any legacy offline sample or mock batches
+    return parsed.filter(
+      (b) => !b.isSample && b.status !== "illustrative_sample" && Boolean(b.txHash),
+    );
   } catch {
     return [];
   }
 }
 
 export function getVerifiedBatches(networkId: NetworkId = "mstTestnet"): VerifiedBatchRecord[] {
-  // Retained for backwards compatibility. Sample batches are explicitly flagged with isSample: true and txHash: null.
-  // Mainnet returns an empty array to maintain strict data separation.
-  if (networkId === "mstTestnet") {
-    return defaultVerifiedBatches as unknown as VerifiedBatchRecord[];
-  }
-  return [];
+  // Returns verified client-recorded batches for backwards compatibility.
+  // For live blockchain reads, fetchOnChainBatches() / useOnChainBatches() is used.
+  return getRecordedBatches(networkId);
 }
 
 export function getExplorerTransactionUrl(hash: string | null | undefined, networkId: NetworkId = "mstTestnet"): string | null {

@@ -19,11 +19,9 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import { ConnectWalletButton } from "../components/wallet/ConnectWalletButton";
 import { useWeb3Wallet, MST_NETWORKS } from "../providers/Web3WalletContext";
 import { useAuthoritativeRole } from "../hooks/useAuthoritativeRole";
-import { getVerifiedBatches } from "../lib/blockchain/mandiMintContract";
 import "./landing.css";
 
 export function LandingPage() {
-  const verifiedBatches = getVerifiedBatches();
   const { connected } = useWeb3Wallet();
   const { role } = useAuthoritativeRole(connected);
 
@@ -253,51 +251,45 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Illustrative Sample Data Section (Clearly Labelled - Not On-Chain) */}
-          <div style={{ marginTop: "1.5rem", background: "rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "1rem" }}>
+          {/* On-Chain Protocol Verification & Status */}
+          <div style={{ marginTop: "1.5rem", background: "rgba(0, 0, 0, 0.2)", borderRadius: "10px", padding: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-              <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 700, color: "#fef08a" }}>
-                ILLUSTRATIVE SAMPLE DATA — NOT ON-CHAIN:
+              <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 700, color: "#6ee7b7" }}>
+                LIVE BLOCKCHAIN PROTOCOL DEPLOYMENT:
               </p>
               <span style={{ fontSize: "0.75rem", color: "#a7f3d0" }}>
-                Prototype demonstration model · Not recorded on-chain
+                MST Testnet · Chain #91562037 · Verified Smart Contract
               </span>
             </div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
-                <thead>
-                  <tr style={{ textAlign: "left", color: "#a7f3d0", borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
-                    <th style={{ padding: "0.4rem" }}>Batch</th>
-                    <th style={{ padding: "0.4rem" }}>Commodity</th>
-                    <th style={{ padding: "0.4rem" }}>Market Mandi</th>
-                    <th style={{ padding: "0.4rem" }}>Quantity</th>
-                    <th style={{ padding: "0.4rem" }}>Farmers</th>
-                    <th style={{ padding: "0.4rem" }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {verifiedBatches.map((b) => (
-                    <tr key={b.batchId} style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                      <td style={{ padding: "0.5rem 0.4rem", fontWeight: 700 }}>#{b.batchId}</td>
-                      <td style={{ padding: "0.5rem 0.4rem" }}>{b.cropName}</td>
-                      <td style={{ padding: "0.5rem 0.4rem", color: "#e2e8f0" }}>{b.mandiName}</td>
-                      <td style={{ padding: "0.5rem 0.4rem", fontWeight: 600 }}>{b.totalQuantityKg.toLocaleString()} kg</td>
-                      <td style={{ padding: "0.5rem 0.4rem" }}>{b.farmers.length} Farmers</td>
-                      <td style={{ padding: "0.5rem 0.4rem" }}>
-                        <span style={{ color: "#fef08a", fontSize: "0.75rem", background: "rgba(254, 240, 138, 0.15)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>
-                          Illustrative Sample (Offline)
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginTop: "0.5rem" }}>
+              <div style={{ background: "rgba(255, 255, 255, 0.06)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
+                <span style={{ display: "block", fontSize: "0.75rem", color: "#a7f3d0" }}>Contract Address</span>
+                <code style={{ fontSize: "0.8rem", color: "#ffffff", wordBreak: "break-all" }}>
+                  0x06289D9c452369abcb9bc1b5D6Adf80982C5679C
+                </code>
+              </div>
+              <div style={{ background: "rgba(255, 255, 255, 0.06)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
+                <span style={{ display: "block", fontSize: "0.75rem", color: "#a7f3d0" }}>On-Chain Verification</span>
+                <span style={{ fontSize: "0.85rem", color: "#ffffff", fontWeight: 600 }}>
+                  Append-Only &amp; Zero Offline Mock Records
+                </span>
+              </div>
             </div>
-            <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#d1fae5", flexWrap: "wrap", gap: "0.5rem" }}>
-              <span>Live batches are queried directly from the smart contract on MST Testnet (Chain #91562037).</span>
-              <Link to="/app/batches" style={{ color: "#fef08a", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                Open Batch Explorer →
-              </Link>
+            <div style={{ marginTop: "0.85rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#d1fae5", flexWrap: "wrap", gap: "0.5rem" }}>
+              <span>Batches and farmer distributions are audited directly on the MST Testnet blockchain.</span>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <a
+                  href="https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#6ee7b7", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                >
+                  Verify on MSTScan ↗
+                </a>
+                <Link to="/app/batches" style={{ color: "#fef08a", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                  Open Batch Explorer →
+                </Link>
+              </div>
             </div>
           </div>
         </div>

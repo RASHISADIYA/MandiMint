@@ -4,12 +4,14 @@ import { isMandiMintReady } from "../config/blockchain";
 import { type NetworkId } from "../config/networks";
 import { useWeb3Wallet } from "../providers/Web3WalletContext";
 import {
+  fetchOnChainBatches,
   formatContractError,
   readBatchDetails,
   readFarmerAllocations,
   readManagerStatus,
   type FarmerAllocationRow,
   type MandiMintBatchDetails,
+  type VerifiedBatchRecord,
 } from "../lib/blockchain/mandiMintContract";
 
 export type ContractReadStatus =
@@ -146,5 +148,19 @@ export function useManagerStatus(
       return readManagerStatus(address, activeNetworkId);
     },
     [address, activeNetworkId],
+  );
+}
+
+export function useOnChainBatches(
+  overrideNetworkId?: NetworkId,
+): ContractReadState<VerifiedBatchRecord[]> {
+  const web3 = useWeb3Wallet();
+  const activeNetworkId = overrideNetworkId || web3.selectedNetwork;
+
+  return useReadState(
+    true,
+    activeNetworkId,
+    () => fetchOnChainBatches(activeNetworkId),
+    [activeNetworkId],
   );
 }

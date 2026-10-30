@@ -6,24 +6,21 @@ import {
   Globe,
   History,
   Layers,
+  RefreshCw,
   Search,
   ShieldCheck,
   UserRound,
   Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { useManagerStatus } from "../../hooks/useMandiMintReads";
+import { useManagerStatus, useOnChainBatches } from "../../hooks/useMandiMintReads";
 import { useAuthoritativeRole } from "../../hooks/useAuthoritativeRole";
 import { useWalletOnboarding } from "../../hooks/useWalletOnboarding";
 import { useWeb3Wallet } from "../../providers/Web3WalletContext";
-import {
-  getRecordedBatches,
-  getSampleBatches,
-} from "../../lib/blockchain/mandiMintContract";
 import { getExplorerTxUrl } from "../../config/networks";
 import { truncateAddress } from "../../lib/format";
-import { useMemo } from "react";
 
 export type DashboardMode = "farmer" | "manager";
 
@@ -44,13 +41,8 @@ export function OverviewPage(_props?: OverviewPageProps) {
     web3.selectedNetwork,
   );
 
-  const recordedBatches = useMemo(() => {
-    return getRecordedBatches(web3.selectedNetwork);
-  }, [web3.selectedNetwork]);
-
-  const sampleBatches = useMemo(() => {
-    return getSampleBatches();
-  }, []);
+  const batchesQuery = useOnChainBatches(web3.selectedNetwork);
+  const recordedBatches = batchesQuery.data ?? [];
 
   const isManagerOrOwner = web3.connected
     ? web3.isManager || web3.isOwner
@@ -372,12 +364,62 @@ export function OverviewPage(_props?: OverviewPageProps) {
               Recorded Batches on {web3.selectedNetworkConfig.name}
             </h2>
           </div>
-          <StatusBadge variant={recordedBatches.length > 0 ? "success" : "neutral"}>
-            {recordedBatches.length > 0 ? `${recordedBatches.length} Batches On-Chain` : "No Records"}
-          </StatusBadge>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <button
+              type="button"
+              onClick={batchesQuery.reload}
+              disabled={batchesQuery.status === "loading"}
+              className="mm-btn mm-btn--ghost"
+              style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+              title="Refresh on-chain records"
+            >
+              <RefreshCw size={13} className={batchesQuery.status === "loading" ? "mm-spin" : ""} /> Refresh
+            </button>
+            <StatusBadge variant={recordedBatches.length > 0 ? "success" : "neutral"}>
+              {batchesQuery.status === "loading"
+                ? "Querying On-Chain…"
+                : recordedBatches.length > 0
+                ? `${recordedBatches.length} Batches On-Chain`
+                : "No Records"}
+            </StatusBadge>
+          </div>
         </div>
 
-        {recordedBatches.length === 0 ? (
+        {/* Loading State */}
+        {batchesQuery.status === "loading" && (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "2.5rem 1.5rem",
+              background: "#f9fafb",
+              borderRadius: "8px",
+              border: "1px dashed #d1d5db",
+              marginTop: "0.75rem",
+              color: "#4b5563",
+            }}
+          >
+            <RefreshCw size={24} className="mm-spin" style={{ margin: "0 auto 0.75rem auto", display: "block", color: "var(--color-agricultural-green)" }} />
+            <h3 style={{ margin: "0 0 0.25rem 0", fontSize: "1rem", color: "#1f2937" }}>
+              Reading Deployed MandiMint Smart Contract…
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#6b7280" }}>
+              Querying verified batch logs and allocations on {web3.selectedNetworkConfig.name}.
+            </p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {batchesQuery.status === "error" && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <ErrorBanner
+              message={batchesQuery.error ?? `Failed to retrieve batch records from ${web3.selectedNetworkConfig.name}. Please check RPC connection.`}
+              onRetry={batchesQuery.reload}
+            />
+          </div>
+        )}
+
+        {/* Empty State: Only when query successfully confirms 0 batches */}
+        {batchesQuery.status === "success" && recordedBatches.length === 0 && (
           <div
             style={{
               textAlign: "center",
@@ -389,13 +431,11 @@ export function OverviewPage(_props?: OverviewPageProps) {
             }}
           >
             <p style={{ fontSize: "1.75rem", margin: "0 0 0.5rem 0" }}>🌾</p>
-            <h3 style={{ margin: "0 0 0.5rem 0", color: "#374151", fontSize: "1.1rem" }}>
-              No Batches Registered on {web3.selectedNetworkConfig.name}
+            <h3 style={{ margin: "0 0 0.5rem 0", color: "#374151", fontSize: "1.1rem", fontWeight: 700 }}>
+              No batches recorded yet
             </h3>
             <p style={{ margin: "0 auto 1.5rem auto", maxWidth: "520px", color: "#6b7280", fontSize: "0.875rem" }}>
-              {web3.isMainnet
-                ? "MandiMint is prepared for MST Mainnet release, but smart contract deployment has not occurred yet. Switch to MST Testnet to record and inspect live batches."
-                : "No batches have been recorded on MST Testnet by your workspace yet. Authorized FPO managers can record batches with immutable farmer allocations."}
+              Create the first verified agricultural batch on MST Testnet.
             </p>
             {web3.isMainnet ? (
               <button
@@ -415,7 +455,10 @@ export function OverviewPage(_props?: OverviewPageProps) {
               </Link>
             )}
           </div>
-        ) : (
+        )}
+
+        {/* Populated State */}
+        {batchesQuery.status === "success" && recordedBatches.length > 0 && (
           <>
             <p className="mm-panel__text">
               These crop batches have been recorded on the MandiMint smart contract with
@@ -490,82 +533,6 @@ export function OverviewPage(_props?: OverviewPageProps) {
             </div>
           </>
         )}
-      </section>
-
-      {/* Illustrative Sample Data Section (Clearly Labelled - Not On-Chain) */}
-      <section className="mm-panel" style={{ marginTop: "1.5rem" }}>
-        <div className="mm-panel__head">
-          <div>
-            <p className="mm-panel__eyebrow">Prototype Demonstration Model</p>
-            <h2 className="mm-panel__title">
-              Illustrative Sample Data — Not On-Chain
-            </h2>
-          </div>
-          <StatusBadge variant="neutral">Offline Sample Model</StatusBadge>
-        </div>
-
-        <p className="mm-panel__text" style={{ fontSize: "0.85rem", color: "#52645b" }}>
-          The following 3 sample records illustrate how crop batches, mandi market prices, and
-          farmer allocations appear in MandiMint. They are demonstration examples and have not
-          been broadcast to the {web3.selectedNetworkConfig.name} blockchain:
-        </p>
-
-        <div style={{ overflowX: "auto" }}>
-          <table className="mm-table" style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.5rem" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left", fontSize: "0.8rem", color: "#6b7280" }}>
-                <th style={{ padding: "0.75rem 0.5rem" }}>SAMPLE ID</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>CROP</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>MANDI MARKET</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>QUANTITY</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>PRICE / TONNE</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>FARMERS</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>DATA STATUS</th>
-                <th style={{ padding: "0.75rem 0.5rem" }}>INSPECT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sampleBatches.map((batch) => (
-                <tr key={batch.batchId} style={{ borderBottom: "1px solid #f3f4f6", fontSize: "0.85rem" }}>
-                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 700, color: "#475569" }}>
-                    #{batch.batchId}
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
-                    {batch.cropName}
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem", color: "#52645b" }}>
-                    {batch.mandiName}
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>
-                    {batch.totalQuantityKg.toLocaleString()} kg
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem" }}>
-                    ₹{batch.salePriceInrPerTonne.toLocaleString()}
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem" }}>
-                    <span className="mm-tag mm-tag--neutral">
-                      {batch.farmers.length} Farmers
-                    </span>
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem" }}>
-                    <span style={{ fontSize: "0.75rem", color: "#64748b", background: "#f1f5f9", padding: "0.2rem 0.45rem", borderRadius: "4px" }}>
-                      Illustrative Sample (Offline)
-                    </span>
-                  </td>
-                  <td style={{ padding: "0.75rem 0.5rem" }}>
-                    <Link
-                      to={`/app/batches/${batch.batchId}`}
-                      className="mm-btn mm-btn--outline"
-                      style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
-                    >
-                      Inspect Sample →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
     </div>
   );
