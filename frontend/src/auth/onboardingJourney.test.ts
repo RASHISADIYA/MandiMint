@@ -215,12 +215,13 @@ describe("Audited Email OTP and Embedded EVM Wallet Onboarding Flow", () => {
     expect(walletType).toBe("injected");
   });
 
-  it("verifies Mainnet contract remains unset and write operations fail closed", () => {
+  it("verifies Mainnet contract is configured with verified deployment address and preserves isolation", () => {
     const mainnetConfig = getNetworkConfig("mstMainnet");
-    expect(mainnetConfig.contractAddress).toBeNull();
-    expect(mainnetConfig.isContractConfigured).toBe(false);
+    expect(mainnetConfig.contractAddress).toBe("0x06289D9c452369abcb9bc1b5D6Adf80982C5679C");
+    expect(mainnetConfig.isContractConfigured).toBe(true);
+    expect(mainnetConfig.chainId).toBe(4646);
 
-    // Write operations throw error if contract is not configured
+    // Fail closed guard if address is null
     const checkCanWrite = (contractAddress: string | null) => {
       if (!contractAddress) {
         throw new Error(
@@ -230,7 +231,8 @@ describe("Audited Email OTP and Embedded EVM Wallet Onboarding Flow", () => {
       return true;
     };
 
-    expect(() => checkCanWrite(mainnetConfig.contractAddress)).toThrow(
+    expect(checkCanWrite(mainnetConfig.contractAddress)).toBe(true);
+    expect(() => checkCanWrite(null)).toThrow(
       "MandiMint smart contract is not yet deployed on MST Mainnet."
     );
   });

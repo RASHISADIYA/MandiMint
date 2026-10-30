@@ -16,7 +16,6 @@ import {
 } from "./blockchain";
 import {
   getVerifiedBatches,
-  MandiMintNotConfiguredError,
   submitRecordBatch,
 } from "../lib/blockchain/mandiMintContract";
 
@@ -43,6 +42,10 @@ describe("MST Networks Configuration", () => {
     expect(MST_MAINNET_CONFIG.explorerUrl).toContain("mstscan.com");
     expect(MST_MAINNET_CONFIG.currency.symbol).toBe("MSTC");
     expect(MST_MAINNET_CONFIG.currency.decimals).toBe(18);
+    expect(MST_MAINNET_CONFIG.contractAddress).toBe(
+      "0x06289D9c452369abcb9bc1b5D6Adf80982C5679C",
+    );
+    expect(MST_MAINNET_CONFIG.isContractConfigured).toBe(true);
   });
 
   it("verifies hexadecimal chain ID calculations match decimal chain IDs", () => {
@@ -95,22 +98,25 @@ describe("Network Separation and Fail-Closed Validation", () => {
     expect(mainnetBatches).toEqual([]); // Mainnet is clean and isolated
   });
 
-  it("fails closed on Mainnet when contract is undeployed", () => {
+  it("verifies Mainnet contract is verified, configured, and ready", () => {
     const ready = isMandiMintReady("mstMainnet");
     const config = getMandiMintContractConfig("mstMainnet");
     const issues = getMandiMintEnvIssues("mstMainnet");
 
-    expect(ready).toBe(false);
-    expect(config).toBeNull();
-    expect(issues.length).toBeGreaterThan(0);
-    expect(issues[0]).toMatch(/not yet deployed/i);
+    expect(ready).toBe(true);
+    expect(config).not.toBeNull();
+    expect(config?.address).toBe("0x06289D9c452369abcb9bc1b5D6Adf80982C5679C");
+    expect(config?.networkId).toBe("mstMainnet");
+    expect(config?.isMainnet).toBe(true);
+    expect(issues).toHaveLength(0);
   });
 
-  it("blocks submitRecordBatch to Mainnet when undeployed", async () => {
+  it("blocks submitRecordBatch when wallet chain does not match target Mainnet network", async () => {
     const fakeSigner = {
       getAddress: async () => "0x1234567890123456789012345678901234567890",
+      signMessage: async () => "0x",
       provider: {
-        getNetwork: async () => ({ chainId: 4646n }),
+        getNetwork: async () => ({ chainId: 91562037n }), // Connected to Testnet, trying to write to Mainnet
       },
     };
 
@@ -125,7 +131,7 @@ describe("Network Separation and Fail-Closed Validation", () => {
 
     await expect(
       submitRecordBatch(fakeSigner as never, mockParams, "mstMainnet"),
-    ).rejects.toThrow(MandiMintNotConfiguredError);
+    ).rejects.toThrow(/requires chain 4646/i);
   });
 
   it("blocks submitRecordBatch when wallet chain does not match target network", async () => {

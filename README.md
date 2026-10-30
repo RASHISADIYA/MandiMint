@@ -4,7 +4,8 @@
 > Built for the **MST Buildathon 2.0** · Track: *Real-World Use Cases & Enterprise Infrastructure*
 
 [![MST Testnet](https://img.shields.io/badge/MST%20Network-Testnet%20(91562037)-059669?style=for-the-badge&logo=blockchain&logoColor=white)](https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C)
-[![MST Mainnet Ready](https://img.shields.io/badge/MST%20Mainnet-Chain%204646%20(Pending%20Deploy)-blue?style=for-the-badge)](https://mariorpc.mstblockchain.com/)
+[![MST Mainnet](https://img.shields.io/badge/MST%20Mainnet-Chain%204646%20(Deployed)-059669?style=for-the-badge&logo=blockchain&logoColor=white)](https://mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C)
+[![Live DApp](https://img.shields.io/badge/Live%20DApp-mandi--mint.vercel.app-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://mandi-mint.vercel.app)
 [![BridgeKey Wallet](https://img.shields.io/badge/Wallet-BridgeKey%20Official-3b82f6?style=for-the-badge)](https://bridgekey.io/)
 [![Solidity 0.8.24](https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
@@ -13,7 +14,7 @@
 
 ## 🏆 MST Buildathon 2.0 Submission & Network Summary
 
-| Property | MST Testnet (Live Demonstration) | MST Mainnet (Production Ready) |
+| Property | MST Testnet (Live Demonstration) | MST Mainnet (Production Live) |
 |---|---|---|
 | **Network Name** | MST Testnet | MST Mainnet |
 | **Chain ID** | `91562037` (`0x5752035`) | `4646` (`0x1226`) |
@@ -21,13 +22,15 @@
 | **Block Explorer** | [https://testnet.mstscan.com](https://testnet.mstscan.com) | [https://mstscan.com](https://mstscan.com) |
 | **Native Currency** | `tMSTC` (18 Decimals) | `MSTC` (18 Decimals) |
 | **Contract Name** | `MandiMint.sol` (Solidity 0.8.24) | `MandiMint.sol` (Solidity 0.8.24) |
-| **Contract Address** | [`0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`](https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C) | **Pending Deployment** *(No address generated)* |
-| **Creation Tx Hash** | [`0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf`](https://testnet.mstscan.com/tx/0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf) | None *(No transactions broadcast)* |
-| **Deployer / Owner** | [`0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0`](https://testnet.mstscan.com/address/0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0) | Preflight validated with deployer |
-| **Preflight Status** | Complete & Verified on-chain | **PASSED** (Balance: `2.5 MSTC`, Gas Est: `0.000911214 MSTC`) |
-| **Deployment Gate** | N/A (Already deployed) | Fail-closed (`CONFIRM_MAINNET_DEPLOYMENT=false`) |
+| **Contract Address** | [`0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`](https://testnet.mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C) | [`0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`](https://mstscan.com/address/0x06289D9c452369abcb9bc1b5D6Adf80982C5679C) |
+| **Creation Tx Hash** | [`0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf`](https://testnet.mstscan.com/tx/0xb2a1ecfa0766be71652afa34694ec880d2787681745181d0e7cff6cb36adcadf) | [`0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e`](https://mstscan.com/tx/0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e) |
+| **Block Number** | `6640665` | `21774067` |
+| **Deployer / Owner** | [`0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0`](https://testnet.mstscan.com/address/0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0) | [`0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0`](https://mstscan.com/address/0xEDe9ca4BfA8e06A1fB832F2F19686b329863CEF0) |
+| **Deployment Status** | Complete & Verified on-chain | Complete & Verified on-chain (`7,642` chars bytecode) |
+| **Deployment Record** | [`deployments/mstTestnet/MandiMint.json`](deployments/mstTestnet/MandiMint.json) | [`deployments/mstMainnet/MandiMint.json`](deployments/mstMainnet/MandiMint.json) |
 
-> **Note on Mainnet Deployment Status**: MandiMint's automated Mainnet deployment pipeline has been fully compiled and verified against the live MST Mainnet RPC in read-only preflight mode. No Mainnet transactions have been broadcast, and no Mainnet contract address will exist until explicit governance execution.
+> **Live DApp URL**: [https://mandi-mint.vercel.app](https://mandi-mint.vercel.app)  
+> MandiMint is officially deployed and verified on both **MST Testnet (Chain ID 91562037)** and **MST Mainnet (Chain ID 4646)**. Users and FPO managers can seamlessly switch networks via the application's network selector to record batches and verify provenance on either environment.
 
 ---
 
@@ -73,7 +76,7 @@ Agricultural supply chains suffer from information asymmetry between smallholder
 - [x] **Smart-Contract Mass Conservation**: Strictly verifies on-chain that $\sum \text{quantitiesKg} == \text{totalQuantityKg}$.
 - [x] **Role-Based Access Control**: Contract owner can authorize and revoke FPO manager addresses via `setManager(address, bool)`.
 - [x] **Zero-Gas Smallholder Model**: FPO Managers pay all transaction gas; farmers receive indexed on-chain allocation records.
-- [x] **Dual-Network Readiness**: Configured for both MST Testnet (live contract `0x0628...5679C`) and MST Mainnet (Chain `4646`).
+- [x] **Dual-Network Live Deployment**: Deployed and verified on both MST Testnet (Chain ID `91562037`) and MST Mainnet (Chain ID `4646`) at contract address `0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`.
 - [x] **Multi-Wallet Support**: Native support for BridgeKey Wallet (`window.bridgekey`), MetaMask/Injected EVM wallets, and Privy embedded wallets (Phone SMS OTP / Google).
 - [x] **Public Blockchain Explorer**: Unrestricted public batch search and farmer allocation lookup without requiring login or wallet connection.
 - [x] **Fail-Closed Mainnet Preflight**: Multi-step preflight script validating chain ID, deployer balance, gas estimation, and safety locks before any deployment.
@@ -158,7 +161,7 @@ graph TD
     subgraph MST Blockchain Infrastructure
         direction TB
         Testnet["MST Testnet (Chain ID 91562037)<br/>Contract: 0x06289D...5679C"]
-        Mainnet["MST Mainnet (Chain ID 4646)<br/>Status: Pending Deployment"]
+        Mainnet["MST Mainnet (Chain ID 4646)<br/>Contract: 0x06289D...5679C"]
         Scan["MSTScan Block Explorer"]
     end
 
@@ -266,8 +269,11 @@ When an authorized manager calls `recordBatch()`, the contract executes a compre
 - **Chain ID**: `4646` (`0x1226`)
 - **Currency Symbol**: `MSTC`
 - **Block Explorer**: `https://mstscan.com`
-- **Deployment Status**: **Pending Governance Deployment**
-- **Preflight Verification**: Complete (balance `2.5 MSTC`, gas estimate `0.000911214 MSTC`).
+- **Deployed MandiMint Contract**: `0x06289D9c452369abcb9bc1b5D6Adf80982C5679C`
+- **Deployment Transaction**: [`0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e`](https://mstscan.com/tx/0xd837f48f445fb9cd784a48cf6c790f0c85ea0267891d60cf8e911165b5963c7e)
+- **Deployment Block**: `21774067`
+- **Deployment Status**: **Verified Live on MST Mainnet** (`7,642` characters on-chain bytecode)
+- **Deployment Record**: [`deployments/mstMainnet/MandiMint.json`](deployments/mstMainnet/MandiMint.json)
 
 ---
 
@@ -389,6 +395,8 @@ MandiMint/
 ├── contracts/
 │   └── MandiMint.sol              # Core Solidity 0.8.24 smart contract
 ├── deployments/
+│   ├── mstMainnet/
+│   │   └── MandiMint.json         # Verified Mainnet deployment metadata
 │   └── mstTestnet/
 │       ├── MandiMint.json         # Verified Testnet deployment metadata
 │       └── transactions.json      # Testnet transaction ledger
@@ -449,5 +457,6 @@ The MandiMint interface incorporates a dedicated AgriTech visual identity tailor
 - **Project**: MandiMint
 - **Event**: MST Blockchain Buildathon 2.0
 - **Track**: Real-World Use Cases & Enterprise Infrastructure
+- **Live Application URL**: [https://mandi-mint.vercel.app](https://mandi-mint.vercel.app)
 - **License**: [MIT](LICENSE)
 - **Repository**: [https://github.com/RASHISADIYA/MandiMint](https://github.com/RASHISADIYA/MandiMint)

@@ -28,6 +28,9 @@ function resolveContractAddress(networkId: NetworkId): string | null {
     if (networkId === "mstTestnet") {
       return "0x06289D9c452369abcb9bc1b5D6Adf80982C5679C";
     }
+    if (networkId === "mstMainnet") {
+      return "0x06289D9c452369abcb9bc1b5D6Adf80982C5679C";
+    }
     return null;
   }
 
@@ -40,8 +43,10 @@ function resolveContractAddress(networkId: NetworkId): string | null {
   }
 
   if (networkId === "mstMainnet") {
-    const raw = import.meta.env.VITE_MANDIMINT_MAINNET_CONTRACT_ADDRESS?.trim();
-    return raw && isAddress(raw) ? getAddress(raw) : null;
+    const raw =
+      import.meta.env.VITE_MANDIMINT_MAINNET_CONTRACT_ADDRESS?.trim() ||
+      "0x06289D9c452369abcb9bc1b5D6Adf80982C5679C";
+    return isAddress(raw) ? getAddress(raw) : null;
   }
 
   return null;
@@ -80,7 +85,7 @@ export const MST_TESTNET_CONFIG: Readonly<NetworkConfig> = {
 /**
  * Official MST Mainnet defaults.
  * Verified on live RPC: Chain ID 4646 (0x1226).
- * Contract: Undeployed until official production release.
+ * Verified contract: 0x06289D9c452369abcb9bc1b5D6Adf80982C5679C.
  */
 export const MST_MAINNET_CONFIG: Readonly<NetworkConfig> = {
   id: "mstMainnet",
@@ -104,7 +109,7 @@ export const MST_MAINNET_CONFIG: Readonly<NetworkConfig> = {
   contractAddress: resolveContractAddress("mstMainnet"),
   isContractConfigured: resolveContractAddress("mstMainnet") !== null,
   faucetUrl: null,
-  description: "MST Blockchain Mainnet production environment. Smart contract deployment required before writes.",
+  description: "Official MST Buildathon 2.0 Mainnet production environment with verified live MandiMint contract.",
 };
 
 export const SUPPORTED_NETWORKS: Record<NetworkId, NetworkConfig> = {

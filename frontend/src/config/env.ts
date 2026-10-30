@@ -126,10 +126,12 @@ export function getMandiMintContractAddress(): string | null {
 
 /**
  * Resolves contract address for MST Mainnet.
- * Must NOT default to Testnet address. Returns null if not yet deployed/configured.
+ * Defaults to the verified deployment address: 0x06289D9c452369abcb9bc1b5D6Adf80982C5679C.
  */
 export function getMandiMintMainnetContractAddress(): string | null {
-  const raw = import.meta.env.VITE_MANDIMINT_MAINNET_CONTRACT_ADDRESS?.trim();
+  const raw =
+    import.meta.env.VITE_MANDIMINT_MAINNET_CONTRACT_ADDRESS?.trim() ||
+    "0x06289D9c452369abcb9bc1b5D6Adf80982C5679C";
   return raw && isAddress(raw) ? getAddress(raw) : null;
 }
 

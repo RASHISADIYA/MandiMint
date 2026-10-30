@@ -163,9 +163,10 @@ describe("Web3WalletContext Authorization & Event Lifecycle Logic", () => {
     expect(mockRemoveListener).toHaveBeenCalledTimes(2);
   });
 
-  it("verifies Mainnet contract address remains null so isManager evaluates to false", () => {
+  it("verifies Mainnet contract is configured with verified deployment address", () => {
     const mainnetCfg = getNetworkConfig("mstMainnet");
-    expect(mainnetCfg.contractAddress).toBeNull();
-    expect(mainnetCfg.isContractConfigured).toBe(false);
+    expect(mainnetCfg.contractAddress).toBe("0x06289D9c452369abcb9bc1b5D6Adf80982C5679C");
+    expect(mainnetCfg.isContractConfigured).toBe(true);
+    expect(mainnetCfg.chainId).toBe(4646);
   });
 });

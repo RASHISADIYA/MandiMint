@@ -4,7 +4,6 @@ import {
   getRecordedBatches,
   getSampleBatches,
   getVerifiedBatches,
-  MandiMintNotConfiguredError,
   submitRecordBatch,
   type MandiMintBatchDetails,
 } from "./mandiMintContract";
@@ -139,12 +138,13 @@ describe("Network Aware Explorer Link Generation", () => {
   });
 });
 
-describe("Contract Write Protection & Mainnet Fail-Closed", () => {
-  it("fails closed on Mainnet batch writes because contract address is null", async () => {
+describe("Contract Write Protection & Network Isolation", () => {
+  it("enforces network chain verification on Mainnet batch writes", async () => {
     const mockSigner = {
       getAddress: async () => "0x1234567890123456789012345678901234567890",
+      signMessage: async () => "0x",
       provider: {
-        getNetwork: async () => ({ chainId: 4646n }),
+        getNetwork: async () => ({ chainId: 91562037n }), // Connected to Testnet, targeting Mainnet
       },
     };
 
@@ -159,7 +159,7 @@ describe("Contract Write Protection & Mainnet Fail-Closed", () => {
 
     await expect(
       submitRecordBatch(mockSigner as never, mockParams, "mstMainnet"),
-    ).rejects.toThrow(MandiMintNotConfiguredError);
+    ).rejects.toThrow(/requires chain 4646/i);
   });
 });
 
