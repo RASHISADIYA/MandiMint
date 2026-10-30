@@ -138,7 +138,7 @@ export function FarmerDashboardPage() {
           marginBottom: "1.5rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", flexWrap: "wrap" }}>
           <Wallet size={16} style={{ color: "var(--color-agricultural-green)" }} />
           <span>Connected Farmer Wallet:</span>
           <code>{truncateAddress(address || "", 8, 6)}</code>

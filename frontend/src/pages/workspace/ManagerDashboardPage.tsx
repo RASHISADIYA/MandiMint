@@ -96,7 +96,7 @@ export function ManagerDashboardPage() {
             background: "var(--color-surface)",
           }}
         >
-          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1.25rem", flexWrap: "wrap" }}>
             <div
               style={{
                 width: "48px",
@@ -174,7 +174,7 @@ export function ManagerDashboardPage() {
             background: "var(--color-surface)",
           }}
         >
-          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1.25rem", flexWrap: "wrap" }}>
             <div
               style={{
                 width: "48px",
@@ -323,7 +323,7 @@ export function ManagerDashboardPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
           gap: "1rem",
           marginBottom: "2rem",
         }}

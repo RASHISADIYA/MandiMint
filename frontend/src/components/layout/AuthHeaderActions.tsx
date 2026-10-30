@@ -15,10 +15,10 @@ export function AuthHeaderActions() {
     : "/onboarding";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
       <Link
         to="/app/batches"
-        className="mm-btn mm-btn--ghost"
+        className="mm-btn mm-btn--ghost mm-hide-mobile"
         style={{ padding: "0.45rem 0.85rem", fontSize: "0.85rem" }}
       >
         Batch Explorer
@@ -27,7 +27,7 @@ export function AuthHeaderActions() {
       {connected && (
         <Link
           to={dashboardTarget}
-          className="mm-btn mm-btn--primary"
+          className="mm-btn mm-btn--primary mm-hide-mobile"
           style={{ padding: "0.45rem 0.85rem", fontSize: "0.85rem" }}
         >
           {role ? "My Dashboard" : "Select Role"}

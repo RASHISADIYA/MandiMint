@@ -116,12 +116,12 @@ export function OnboardingPage() {
         {/* Header Banner */}
         <div
           style={{
-            padding: "2rem 2.25rem 1.75rem 2.25rem",
+            padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 3.5vw, 2.25rem)",
             background: "linear-gradient(135deg, var(--color-warm-cream) 0%, #edf4ee 100%)",
             borderBottom: "1px solid var(--color-borders)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
             <span
               style={{
                 fontSize: "0.75rem",
@@ -178,7 +178,7 @@ export function OnboardingPage() {
         </div>
 
         {/* Role Cards Grid */}
-        <div style={{ padding: "2rem 2.25rem" }}>
+        <div style={{ padding: "clamp(1.25rem, 4vw, 2rem) clamp(1rem, 3.5vw, 2.25rem)" }}>
           <div
             style={{
               display: "grid",
@@ -330,8 +330,8 @@ export function OnboardingPage() {
           )}
 
           {/* Primary Action Button: Continue */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontSize: "0.85rem", color: "var(--color-secondary-text)", margin: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <p style={{ fontSize: "0.85rem", color: "var(--color-secondary-text)", margin: 0, flex: "1 1 200px" }}>
               {selectedRole
                 ? `Ready to enter the ${selectedRole === "farmer" ? "Farmer" : "FPO Manager"} workspace.`
                 : "Please select a role above to proceed."}
@@ -352,12 +352,14 @@ export function OnboardingPage() {
         {/* Footer Info */}
         <div
           style={{
-            padding: "1rem 2.25rem",
+            padding: "1rem clamp(1rem, 3.5vw, 2.25rem)",
             background: "var(--color-background)",
             borderTop: "1px solid var(--color-borders)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            flexWrap: "wrap",
+            gap: "0.5rem",
             fontSize: "0.8rem",
             color: "var(--color-secondary-text)",
           }}

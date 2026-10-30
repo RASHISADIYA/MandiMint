@@ -83,7 +83,7 @@ export function LandingPage() {
               </Link>
             </div>
 
-            <div style={{ marginTop: "1rem", display: "flex", gap: "1rem", alignItems: "center", fontSize: "0.8rem", color: "#64748b" }}>
+            <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.5rem 1rem", alignItems: "center", fontSize: "0.8rem", color: "#64748b" }}>
               <span>
                 Verified Contract:{" "}
                 <a
@@ -95,7 +95,7 @@ export function LandingPage() {
                   0x06289D...5679C
                 </a>
               </span>
-              <span>·</span>
+              <span className="mm-hide-mobile">·</span>
               <a
                 href={MST_NETWORKS.testnet.faucetUrl || undefined}
                 target="_blank"
@@ -162,7 +162,7 @@ export function LandingPage() {
             background: "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)",
             color: "#ffffff",
             borderRadius: "16px",
-            padding: "2rem",
+            padding: "clamp(1.25rem, 4vw, 2rem)",
             boxShadow: "0 20px 40px rgba(6, 78, 59, 0.25)",
           }}
         >
@@ -208,7 +208,7 @@ export function LandingPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
               gap: "1rem",
               marginTop: "1.5rem",
             }}
@@ -261,7 +261,7 @@ export function LandingPage() {
                 MST Testnet · Chain #91562037 · Verified Smart Contract
               </span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginTop: "0.5rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: "1rem", marginTop: "0.5rem" }}>
               <div style={{ background: "rgba(255, 255, 255, 0.06)", padding: "0.75rem 1rem", borderRadius: "8px" }}>
                 <span style={{ display: "block", fontSize: "0.75rem", color: "#a7f3d0" }}>Contract Address</span>
                 <code style={{ fontSize: "0.8rem", color: "#ffffff", wordBreak: "break-all" }}>

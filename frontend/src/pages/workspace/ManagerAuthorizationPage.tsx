@@ -241,8 +241,8 @@ export function ManagerAuthorizationPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 240px", minWidth: 0 }}>
               <Input
                 label="Manager EVM Wallet Address"
                 placeholder="0x..."
@@ -275,7 +275,7 @@ export function ManagerAuthorizationPage() {
             </p>
           )}
 
-          <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
             <Button
               type="submit"
               variant="primary"

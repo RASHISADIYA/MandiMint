@@ -69,7 +69,7 @@ export function BatchDetailsPage() {
     <div className="mm-page">
       <header className="mm-page-head">
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem", flexWrap: "wrap" }}>
             <span
               style={{
                 fontSize: "0.75rem",
@@ -88,7 +88,7 @@ export function BatchDetailsPage() {
               </StatusBadge>
             )}
           </div>
-          <h1 className="mm-page-head__title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h1 className="mm-page-head__title" style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <span>{crop ? crop.emoji : "🌾"}</span>
             <span>{crop ? crop.name : `Batch #${validId.toString()}`}</span>
             {crop && (

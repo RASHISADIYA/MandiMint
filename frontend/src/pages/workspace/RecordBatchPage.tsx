@@ -437,10 +437,10 @@ export function RecordBatchPage() {
           style={{
             background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
             border: "2px solid #86efac",
-            padding: "2rem",
+            padding: "clamp(1rem, 4vw, 2rem)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
             <CheckCircle2 size={32} style={{ color: "#16a34a" }} />
             <div>
               <h2 style={{ margin: 0, fontSize: "1.35rem", color: "#14532d", fontWeight: 700 }}>
@@ -554,7 +554,7 @@ export function RecordBatchPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 150px), 1fr))",
                 gap: "0.5rem",
                 marginTop: "1rem",
               }}
@@ -715,7 +715,7 @@ export function RecordBatchPage() {
                       : "1px solid #fde68a",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.4rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.4rem" }}>
                   <span>
                     Allocated: {summary.allocationTotal.toLocaleString()} kg / {summary.total.toLocaleString()} kg
                   </span>
@@ -757,53 +757,37 @@ export function RecordBatchPage() {
                 return (
                   <div
                     key={alloc.id}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 180px 40px",
-                      gap: "0.75rem",
-                      alignItems: "end",
-                      padding: "0.75rem",
-                      background: "#fafafa",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                    }}
+                    className="mm-record-allocation-row"
                   >
-                    <Input
-                      label={`Farmer #${index + 1} EVM Address`}
-                      placeholder="0x..."
-                      value={alloc.address}
-                      onChange={(e) => updateAllocation(alloc.id, "address", e.target.value)}
-                      error={allocError?.address}
-                      disabled={busy}
-                      required
-                    />
-                    <Input
-                      label="Quantity (kg)"
-                      placeholder="e.g. 1500"
-                      inputMode="numeric"
-                      value={alloc.quantityKg}
-                      onChange={(e) => updateAllocation(alloc.id, "quantityKg", e.target.value)}
-                      error={allocError?.quantityKg}
-                      disabled={busy}
-                      required
-                    />
+                    <div className="mm-record-allocation-row__addr">
+                      <Input
+                        label={`Farmer #${index + 1} EVM Address`}
+                        placeholder="0x..."
+                        value={alloc.address}
+                        onChange={(e) => updateAllocation(alloc.id, "address", e.target.value)}
+                        error={allocError?.address}
+                        disabled={busy}
+                        required
+                      />
+                    </div>
+                    <div className="mm-record-allocation-row__qty">
+                      <Input
+                        label="Quantity (kg)"
+                        placeholder="e.g. 1500"
+                        inputMode="numeric"
+                        value={alloc.quantityKg}
+                        onChange={(e) => updateAllocation(alloc.id, "quantityKg", e.target.value)}
+                        error={allocError?.quantityKg}
+                        disabled={busy}
+                        required
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => removeAllocation(alloc.id)}
                       disabled={busy || draft.allocations.length <= 1}
                       title="Remove farmer"
-                      style={{
-                        height: "42px",
-                        width: "40px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "none",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "6px",
-                        color: "#ef4444",
-                        cursor: "pointer",
-                      }}
+                      className="mm-record-allocation-row__remove"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -814,18 +798,7 @@ export function RecordBatchPage() {
           </section>
 
           {/* Submission Bar */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "1.5rem",
-              padding: "1.25rem",
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-            }}
-          >
+          <div className="mm-submission-bar">
             <div>
               <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>
                 Ready to record batch on {web3.selectedNetworkConfig.name}?

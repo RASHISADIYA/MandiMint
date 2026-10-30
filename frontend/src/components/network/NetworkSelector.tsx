@@ -75,28 +75,16 @@ export function NetworkSelector({ className = "" }: { className?: string }) {
         }`}
       >
         <span
-          className={`mm-net-dot ${
-            !connected
-              ? "mm-net-dot--offline"
-              : isNetworkMismatch
-              ? "mm-net-dot--mismatch"
-              : isMainnet
-              ? "mm-net-dot--mainnet"
-              : "mm-net-dot--testnet"
-          }`}
+          className="mm-net-dot mm-net-dot--deployed"
           aria-hidden="true"
         />
 
         <span className="mm-net-selector__name">
-          {selectedNetworkConfig.name}
+          {selectedNetworkConfig.name} (Chain ID: {selectedNetworkConfig.chainId}) •
         </span>
 
-        <span
-          className={`mm-net-badge ${
-            isMainnet ? "mm-net-badge--mainnet" : "mm-net-badge--testnet"
-          }`}
-        >
-          {selectedNetworkConfig.badge}
+        <span className="mm-net-badge mm-net-badge--deployed">
+          DEPLOYED
         </span>
 
         {isNetworkMismatch && (
@@ -135,11 +123,11 @@ export function NetworkSelector({ className = "" }: { className?: string }) {
               onClick={() => handleSelect("mstTestnet")}
             >
               <div className="mm-net-option__left">
-                <span className="mm-net-dot mm-net-dot--testnet" />
+                <span className="mm-net-dot mm-net-dot--testnet mm-net-dot--deployed" />
                 <div>
                   <div className="mm-net-option__title-row">
                     <span className="mm-net-option__title">MST Testnet</span>
-                    <span className="mm-net-badge mm-net-badge--testnet">TESTNET</span>
+                    <span className="mm-net-badge mm-net-badge--deployed">DEPLOYED</span>
                   </div>
                   <p className="mm-net-option__sub">
                     Chain 91562037 · Verified MandiMint Contract
@@ -162,14 +150,14 @@ export function NetworkSelector({ className = "" }: { className?: string }) {
               onClick={() => handleSelect("mstMainnet")}
             >
               <div className="mm-net-option__left">
-                <span className="mm-net-dot mm-net-dot--mainnet" />
+                <span className="mm-net-dot mm-net-dot--mainnet mm-net-dot--deployed" />
                 <div>
                   <div className="mm-net-option__title-row">
                     <span className="mm-net-option__title">MST Mainnet</span>
-                    <span className="mm-net-badge mm-net-badge--mainnet">MAINNET</span>
+                    <span className="mm-net-badge mm-net-badge--mainnet mm-net-badge--deployed">DEPLOYED</span>
                   </div>
                   <p className="mm-net-option__sub">
-                    Chain 4646 · Production (Contract Undeployed)
+                    Chain 4646 · Production (Contract Deployed)
                   </p>
                 </div>
               </div>

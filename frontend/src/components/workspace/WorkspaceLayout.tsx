@@ -102,7 +102,7 @@ export function WorkspaceLayout({ area = "shared" }: { area?: WorkspaceArea }) {
         </div>
 
         {/* Dual-Network Selector & Single Consolidated Wallet Entry Point */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
           <NetworkSelector />
           <ConnectWalletButton />
         </div>

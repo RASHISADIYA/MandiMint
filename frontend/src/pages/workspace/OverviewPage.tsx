@@ -167,7 +167,7 @@ export function OverviewPage(_props?: OverviewPageProps) {
             )}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           {web3.isTestnet && web3.selectedNetworkConfig.faucetUrl && (
             <a
               href={web3.selectedNetworkConfig.faucetUrl}

@@ -103,7 +103,7 @@ export function BatchLookupPage() {
             <p className="mm-panel__eyebrow">On-Chain Records</p>
             <h2 className="mm-panel__title">Recorded Batches on {web3.selectedNetworkConfig.name}</h2>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={batchesQuery.reload}
@@ -194,7 +194,7 @@ export function BatchLookupPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
                 gap: "1rem",
                 marginTop: "1.25rem",
               }}

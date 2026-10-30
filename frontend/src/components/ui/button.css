@@ -4,14 +4,15 @@
   justify-content: center;
   gap: var(--space-2);
   min-height: 2.75rem;
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-6);
+  border-radius: 9999px;
   border: 1px solid transparent;
   font-family: inherit;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.12);
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -20,6 +21,11 @@
     transform var(--transition-fast);
   text-decoration: none;
   touch-action: manipulation;
+}
+
+.mm-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(22, 101, 52, 0.22);
 }
 
 .mm-btn:focus-visible {
@@ -39,12 +45,15 @@
 }
 
 .mm-btn--primary {
-  background-color: var(--color-deep-forest);
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
   color: var(--color-white);
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.3);
 }
 
 .mm-btn--primary:hover:not(:disabled) {
-  background-color: var(--color-rich-green);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 6px 22px rgba(22, 101, 52, 0.45);
+  transform: translateY(-2px);
 }
 
 .mm-btn--secondary {
